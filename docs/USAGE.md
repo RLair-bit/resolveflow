@@ -58,7 +58,7 @@
 
 ## Testar as funcionalidades novas
 
-1. **Atalhos:** prime `/` (fora de campos de texto) ou `Ctrl+K` em qualquer sítio — o foco deve ir para a caixa de pesquisa. Com texto na pesquisa, prime `Esc` para a limpar.
+1. **Atalhos:** prime `/` (fora de campos de texto) em qualquer sítio — o foco deve ir para a caixa de pesquisa. Com texto na pesquisa, prime `Esc` para a limpar.
 2. **Tema:** clica no botão 🌙/☀️ no cabeçalho. A app deve mudar de tema e manter a escolha após recarregar a página.
 3. **Favoritos e recentes:** abre uma resolução e clica em "☆ Adicionar aos favoritos" — deve aparecer em "⭐ Favoritos" na barra lateral, e a resolução também aparece em "🕘 Recentes" assim que a visitas.
 4. **Link direto:** clica em "🔗 Copiar link" numa resolução, cola o link numa nova aba — deve abrir diretamente nessa resolução. Usa o botão "recuar" do browser para confirmar que volta ao ecrã anterior.
@@ -66,7 +66,17 @@
 6. **Feedback:** clica em 👍 ou 👎 numa resolução — o contador deve aumentar e o botão escolhido fica destacado.
 7. **Testar chave (modo Online):** com uma chave guardada, clica em "Testar chave" — deve validar com um pedido mínimo e mostrar "✓ Chave válida" ou o erro correspondente.
 8. **Chat — Parar / Limpar:** faz uma pergunta à IA e clica em "⏹️ Parar" a meio da resposta — a resposta parcial deve ficar guardada na conversa. Clica em "🗑️ Limpar conversa" para reiniciar (pede confirmação).
-9. **Apagar todos os dados:** no rodapé, clica em "Apagar todos os dados locais desta app" — depois de confirmar, a chave, favoritos, recentes, feedback, modo e tema voltam todos ao valor por omissão.
+9. **Apagar todos os dados:** no rodapé, clica em "Apagar todos os dados locais desta app" — depois de confirmar, a chave, favoritos, recentes, feedback, modo, tema e resoluções personalizadas voltam todos ao valor por omissão.
+
+## Testar pesquisa difusa, paleta de comandos, editor e mobile
+
+1. **Pesquisa difusa (typo-tolerante):** escreve algo com um pequeno erro, ex. `reembolo` (falta o "s") — deve continuar a encontrar "Pedido de reembolso".
+2. **Autocomplete:** começa a escrever na pesquisa (ex. `pass`) — deve aparecer uma lista de sugestões por baixo da caixa; usa `↑`/`↓` para navegar e `Enter` para abrir a sugestão selecionada.
+3. **Paleta de comandos:** prime `Ctrl+K` (ou `Cmd+K` no Mac) em qualquer sítio — abre uma janela central com "Ações" (mudar modo, tema, criar resolução) e resultados de pesquisa. `Esc` fecha.
+4. **Criar resolução personalizada:** na barra lateral, clica em "+ Nova" (ou usa a ação "📝 Criar nova resolução" na paleta). Preenche título, resumo, passos (um por linha) e palavras-chave, e clica em "Guardar" — deve aparecer na categoria "Minhas Resoluções" e ser encontrada pela pesquisa.
+5. **Editar/eliminar:** abre uma resolução personalizada e clica em "✏️ Editar" para a alterar, ou em "Eliminar" (dentro do editor) para a remover — pede confirmação.
+6. **Exportar/Importar:** no rodapé, clica em "Exportar as minhas resoluções (.json)" para descarregar um backup; usa "Importar resoluções (.json)" para carregar esse ficheiro noutro browser/computador.
+7. **Menu mobile:** reduz a largura da janela do browser (ou usa as ferramentas de programador em modo responsivo, <860px) — deve aparecer um botão ☰ no cabeçalho que abre a barra lateral como gaveta deslizante; clicar fora dela ou escolher uma resolução fecha-a automaticamente.
 
 ## Confirmar a persistência do modo
 

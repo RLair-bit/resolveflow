@@ -24,14 +24,16 @@ iOS.
 
 ## Funcionalidades
 
-- Árvore de decisão navegável + pesquisa local com destaque dos termos encontrados.
-- Atalhos de teclado: `/` ou `Ctrl+K` foca a pesquisa; `Esc` limpa-a.
+- Árvore de decisão navegável + pesquisa local **tolerante a erros de escrita** (typo-tolerante), com destaque dos termos encontrados e sugestões em autocomplete enquanto escreves.
+- Atalhos de teclado: `/` foca a pesquisa; `Ctrl+K`/`Cmd+K` abre a **paleta de comandos** (salta para qualquer resolução ou executa ações rápidas); `Esc` fecha/limpa.
 - Tema claro/escuro (segue o sistema por omissão, com botão 🌙/☀️ para forçar).
 - Favoritos ⭐ e "vistos recentemente" 🕘 na barra lateral.
 - Links diretos por URL (`#categoria/subtopico`), partilháveis e com recuar/avançar do browser.
 - Em cada resolução: copiar passos, copiar link, imprimir, marcar como favorito e votar "Foi útil? 👍/👎".
+- **Editor de resoluções personalizadas** — cria/edita/elimina as tuas próprias resoluções (categoria "Minhas Resoluções"), guardadas só no teu browser, sem tocar no código. Exporta/importa como ficheiro `.json` para backup ou partilha entre computadores.
+- Menu lateral responsivo (gaveta com hamburger) em ecrãs pequenos/telemóvel.
 - Modo Online (IA): respostas em streaming, com Markdown básico, botão "Parar", "Limpar conversa", "Testar chave" e conversa persistida apenas durante a sessão do separador (`sessionStorage`).
-- Sincronização automática entre separadores abertos (modo, chave e tema).
+- Sincronização automática entre separadores abertos (modo, chave, tema e resoluções personalizadas).
 - Botão único no rodapé para apagar todos os dados locais da app.
 
 ## Modos de funcionamento
