@@ -2,7 +2,8 @@
 
 ## Abrir a aplicação
 
-1. Vai à pasta do projeto.
+1. Vai à pasta do projeto (mantém `index.html`, `style.css` e `app.js`
+   juntos na mesma pasta).
 2. Faz duplo clique em `index.html` (ou abre-o com o browser à tua
    escolha). Não precisas de servidor nem de ligação à internet para o
    modo Offline.
@@ -80,7 +81,7 @@
 Numa pasta do projeto, com o Git instalado, podes correr (PowerShell):
 
 ```powershell
-Select-String -Path index.html,README.md,docs\USAGE.md -Pattern "sk-ant-[a-zA-Z0-9]"
+Select-String -Path index.html,style.css,app.js,README.md,docs\USAGE.md -Pattern "sk-ant-[a-zA-Z0-9]"
 ```
 
 Não deve devolver nenhuma linha — só existem placeholders (ex.:
