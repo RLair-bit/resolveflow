@@ -1,12 +1,16 @@
 # ResolveFlow
 
-Ferramenta pessoal e open-source de apoio ao cliente, num único ficheiro
-`index.html` (HTML + CSS + JavaScript vanilla, **sem dependências e sem
-build**). Tem uma árvore de decisão navegável (categorias → sub-tópicos →
-resoluções com passos) e pesquisa por palavra-chave.
+Ferramenta pessoal e open-source de apoio ao cliente — `index.html` +
+`style.css` + `app.js`, tudo em HTML + CSS + JavaScript vanilla, **sem
+dependências e sem build**. Tem uma árvore de decisão navegável
+(categorias → sub-tópicos → resoluções com passos) e pesquisa por
+palavra-chave.
 
-Abre diretamente `index.html` num browser — não precisas de servidor, npm,
-nem ligação à internet para o modo por omissão.
+Abre diretamente `index.html` num browser (mantém os 3 ficheiros na mesma
+pasta) — não precisas de servidor, npm, nem ligação à internet para o modo
+por omissão. `<link>`/`<script src>` locais funcionam normalmente em
+`file://`, ao contrário de módulos ES ou `fetch()`, por isso dividir em 3
+ficheiros não quebra o "duplo clique e funciona".
 
 ## Funcionalidades
 
@@ -42,7 +46,7 @@ O seletor de modo está no cabeçalho. A escolha fica guardada no
   chama a IA se não houver nada local relevante, ou se pedires
   explicitamente ("Perguntar à IA mesmo assim").
 - Usa a API de mensagens da Anthropic (Claude) por omissão. O modelo é
-  configurável numa constante no topo do `<script>` do `index.html`
+  configurável numa constante no topo do `app.js`
   (`AI_CONFIG.model`), para poderes trocar de modelo facilmente.
 - Erros comuns (chave inválida, sem internet, limite de pedidos) são
   mostrados de forma percetível, não como JSON em bruto.
@@ -62,9 +66,9 @@ O seletor de modo está no cabeçalho. A escolha fica guardada no
 ## 🔐 Segurança e privacidade — lê antes de usar
 
 - **A chave de API nunca está no código-fonte.** Não existe nenhuma chave
-  de exemplo, por omissão ou hardcoded em `index.html`, no README ou em
-  qualquer outro ficheiro deste repositório. É sempre pedida ao
-  utilizador em runtime.
+  de exemplo, por omissão ou hardcoded em `app.js`, `index.html`, no
+  README ou em qualquer outro ficheiro deste repositório. É sempre pedida
+  ao utilizador em runtime.
 - **A chave só existe em `localStorage`, no browser onde a colaste.** Não
   é sincronizada, não é enviada para nenhum servidor além da própria API
   da Anthropic quando fazes uma pergunta, e não sai do teu computador de
@@ -96,13 +100,18 @@ O seletor de modo está no cabeçalho. A escolha fica guardada no
 
 ```
 resolveflow/
-├── index.html        # aplicação completa (HTML + CSS + JS), sem dependências
-├── README.md          # este ficheiro
-├── .gitignore         # evita commit acidental de chaves/segredos
+├── index.html        # marcação da aplicação (HTML)
+├── style.css          # estilo (tema claro/escuro, layout, componentes)
+├── app.js              # lógica (árvore de decisão, pesquisa, modo IA, etc.)
+├── README.md            # este ficheiro
+├── .gitignore            # evita commit acidental de chaves/segredos
 └── docs/
-    ├── USAGE.md        # guia de utilização passo-a-passo
-    └── BRANCHING.md     # estratégia de branches e convenção de commits
+    ├── USAGE.md            # guia de utilização passo-a-passo
+    └── BRANCHING.md         # estratégia de branches e convenção de commits
 ```
+
+Os 3 ficheiros continuam **sem dependências, sem build e sem framework** —
+é só HTML/CSS/JS lidos diretamente pelo browser.
 
 ## Contribuir / organização do repositório
 
@@ -112,10 +121,11 @@ Este repositório segue um fluxo de branches simples (`main` estável,
 
 ## Personalizar
 
-- **Árvore de decisão:** edita o array `TREE` no `<script>` de
-  `index.html` (categorias → `subtopics` → `steps`).
-- **Modelo de IA / endpoint:** edita o objeto `AI_CONFIG` no topo do
-  `<script>` de `index.html`.
+- **Árvore de decisão:** edita o array `TREE` em `app.js`
+  (categorias → `subtopics` → `steps`).
+- **Modelo de IA / endpoint:** edita o objeto `AI_CONFIG` no topo de
+  `app.js`.
+- **Cores/tema:** edita as variáveis CSS em `style.css` (`:root`).
 - **Link do chat de IA genérico (modo Offline):** edita a constante
   `GENERIC_AI_CHAT_URL`.
 
