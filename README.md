@@ -100,8 +100,15 @@ resolveflow/
 ├── README.md          # este ficheiro
 ├── .gitignore         # evita commit acidental de chaves/segredos
 └── docs/
-    └── USAGE.md        # guia de utilização passo-a-passo
+    ├── USAGE.md        # guia de utilização passo-a-passo
+    └── BRANCHING.md     # estratégia de branches e convenção de commits
 ```
+
+## Contribuir / organização do repositório
+
+Este repositório segue um fluxo de branches simples (`main` estável,
+`develop` de integração, `feature/*` por funcionalidade). Ver
+[docs/BRANCHING.md](docs/BRANCHING.md) para o fluxo completo.
 
 ## Personalizar
 
