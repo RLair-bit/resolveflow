@@ -37,6 +37,43 @@
     --font-mono:'IBM Plex Mono','Consolas',monospace;
   }
 
+  /* Tema escuro: segue a preferência do sistema por omissão; o botão no
+     cabeçalho pode forçar claro/escuro via [data-theme] em <html>. */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --color-bg:#14161d;
+      --color-surface:#1b1e28;
+      --color-surface-2:#242835;
+      --color-border:#333846;
+      --color-text:#e7e9f0;
+      --color-text-muted:#9aa0b4;
+      --accent-soft:rgba(45,91,227,0.22);
+      --accent-soft-2:rgba(45,91,227,0.32);
+      --success-bg:#123524;
+      --danger-bg:#3a1a17;
+      --warning-bg:#332a05;
+      --warning-text:#f0c852;
+      --shadow:0 2px 10px rgba(0,0,0,0.35);
+      --shadow-lg:0 12px 30px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --color-bg:#14161d;
+    --color-surface:#1b1e28;
+    --color-surface-2:#242835;
+    --color-border:#333846;
+    --color-text:#e7e9f0;
+    --color-text-muted:#9aa0b4;
+    --accent-soft:rgba(45,91,227,0.22);
+    --accent-soft-2:rgba(45,91,227,0.32);
+    --success-bg:#123524;
+    --danger-bg:#3a1a17;
+    --warning-bg:#332a05;
+    --warning-text:#f0c852;
+    --shadow:0 2px 10px rgba(0,0,0,0.35);
+    --shadow-lg:0 12px 30px rgba(0,0,0,0.55);
+  }
+
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -346,6 +383,85 @@
     padding:20px; border-top:1px solid var(--color-border);
   }
   footer.app-footer a{color:var(--color-text-muted); text-decoration:underline;}
+  footer.app-footer .danger-link{
+    background:none; border:none; color:var(--danger); text-decoration:underline;
+    font-size:12px; cursor:pointer; padding:0;
+  }
+
+  /* ---------- Botão de ícone (tema) ---------- */
+  .icon-btn{
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.08);
+    color:var(--color-header-text);
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; flex:none;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.16);}
+
+  /* ---------- Destaque de pesquisa ---------- */
+  mark{background:rgba(45,91,227,0.30); color:inherit; border-radius:3px; padding:0 2px;}
+
+  /* ---------- Favoritos / Recentes (barra lateral) ---------- */
+  .side-section{margin-bottom:16px;}
+  .side-section h3{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--color-text-muted); margin-bottom:6px;}
+  .side-section ul{list-style:none; margin:0; padding:0;}
+  .side-section li button{
+    width:100%; text-align:left; background:none; border:none; padding:5px 8px;
+    border-radius:var(--radius-sm); font-size:13px; color:var(--color-text-muted);
+  }
+  .side-section li button:hover{background:var(--color-surface-2); color:var(--color-text);}
+  .side-section .empty-hint{font-size:12px; color:var(--color-text-muted); padding:2px 8px; font-style:italic;}
+
+  /* ---------- Toolbar da resolução (copiar/imprimir/favorito/feedback) ---------- */
+  .resolution-toolbar{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-top:18px; padding-top:16px; border-top:1px solid var(--color-border);
+  }
+  .icon-text-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--color-surface-2); color:var(--color-text); border:none;
+    padding:7px 12px; border-radius:var(--radius-sm); font-size:12.5px; font-weight:600;
+  }
+  .icon-text-btn:hover{background:var(--accent-soft);}
+  .icon-text-btn.active{background:var(--accent-soft); color:var(--accent-hover);}
+  .feedback-row{display:flex; align-items:center; gap:6px; margin-left:auto;}
+  .feedback-row .label{font-size:12px; color:var(--color-text-muted);}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(6px);
+    background:var(--color-header-bg); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:13px; box-shadow:var(--shadow-lg); opacity:0; pointer-events:none;
+    transition:opacity .2s, transform .2s; z-index:1000; max-width:90vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Markdown dentro das bolhas de chat ---------- */
+  .bubble strong{font-weight:700;}
+  .bubble em{font-style:italic;}
+  .bubble code{background:rgba(0,0,0,0.08); padding:1px 5px; border-radius:4px; font-family:var(--font-mono); font-size:.92em;}
+  .bubble pre{background:rgba(0,0,0,0.08); padding:10px 12px; border-radius:8px; overflow-x:auto; margin:8px 0;}
+  .bubble pre code{background:none; padding:0;}
+  .bubble ul{margin:6px 0; padding-left:20px;}
+  .bubble a{text-decoration:underline;}
+  .chat-msg.assistant .bubble code, .chat-msg.assistant .bubble pre{background:rgba(255,255,255,0.08);}
+  .bubble.cursor-blink::after{content:"▍"; animation:rf-blink 1s step-start infinite; color:var(--accent);}
+  @keyframes rf-blink{50%{opacity:0;}}
+
+  /* ---------- Ações do chat (parar / limpar) ---------- */
+  .chat-actions-row{display:flex; justify-content:flex-end; gap:8px; padding:10px 16px 0 16px;}
+  .chat-actions-row .btn{font-size:11.5px; padding:5px 10px;}
+
+  /* ---------- Impressão ---------- */
+  @media print{
+    header.app-header, nav.tree, .privacy-banner, footer.app-footer,
+    .ai-section, .resolution-toolbar, .search-results, .toast{ display:none !important; }
+    body{background:#fff; color:#000;}
+    .layout{grid-template-columns:1fr; max-width:none;}
+    main.content{padding:0;}
+    .card{box-shadow:none; border:none;}
+  }
 </style>
 </head>
 <body>
@@ -366,6 +482,8 @@
       <input type="text" id="searchInput" placeholder="Pesquisar por palavra-chave (ex.: password, reembolso, atraso)…" autocomplete="off">
     </div>
 
+    <button type="button" class="icon-btn" id="btnThemeToggle" title="Mudar tema" aria-label="Mudar tema claro/escuro">🌙</button>
+
     <div class="mode-toggle" role="tablist" aria-label="Modo de funcionamento">
       <button type="button" id="btnModeOffline" role="tab" aria-selected="true">
         <span>🔒</span><span>Offline</span>
@@ -383,6 +501,7 @@
 
   <div class="layout">
     <nav class="tree" id="treeNav" aria-label="Árvore de categorias">
+      <div id="sideLists"></div>
       <h2>Categorias</h2>
       <div id="treeContainer"></div>
     </nav>
@@ -395,6 +514,7 @@
   <footer class="app-footer">
     ResolveFlow — ferramenta pessoal e open-source de apoio ao cliente. Não substitui as políticas de confidencialidade do teu empregador.
     <br>Consulta o <a href="README.md">README</a> para mais informação sobre os modos e privacidade.
+    <br><button type="button" class="danger-link" id="btnClearAllData">Apagar todos os dados locais desta app (chave, favoritos, histórico, feedback)</button>
   </footer>
 
 </div>
@@ -428,8 +548,13 @@
   const GENERIC_AI_CHAT_URL = "https://claude.ai/new";
 
   const LS_KEYS = {
-    mode: "resolveflow_mode",           // "offline" | "online"
-    apiKey: "resolveflow_api_key"       // guardada só no browser do utilizador
+    mode: "resolveflow_mode",              // "offline" | "online"
+    apiKey: "resolveflow_api_key",         // guardada só no browser do utilizador
+    theme: "resolveflow_theme",            // "light" | "dark" | (ausente = segue o sistema)
+    recent: "resolveflow_recent",          // array de {catId,subId}, vistos recentemente
+    favorites: "resolveflow_favorites",    // array de {catId,subId}, marcados como favoritos
+    feedback: "resolveflow_feedback",      // objeto { "cat/sub": {up,down,voted} }
+    chatSession: "resolveflow_chat_session" // histórico de chat — sessionStorage (limpa ao fechar o separador)
   };
 
   /* ---------------------------------------------------------------------
@@ -649,7 +774,8 @@
   let state = {
     mode: "offline",          // "offline" | "online"
     selected: null,           // { catId, subId }
-    chatHistory: []           // [{role:'user'|'assistant', content:'...'}]
+    chatHistory: [],          // [{role:'user'|'assistant', content:'...'}]
+    abortController: null     // AbortController do pedido de IA em curso (para o botão "Parar")
   };
 
   /* ---------------------------------------------------------------------
@@ -674,6 +800,263 @@
     const sub = cat.subtopics.find(s => s.id === subId);
     if(!sub) return null;
     return {cat, sub};
+  }
+
+  /* ---------------------------------------------------------------------
+     TOAST — pequena notificação temporária no fundo do ecrã
+     --------------------------------------------------------------------- */
+  function showToast(msg){
+    let t = document.getElementById("toast");
+    if(!t){
+      t = document.createElement("div");
+      t.id = "toast";
+      t.className = "toast";
+      t.setAttribute("role", "status");
+      t.setAttribute("aria-live", "polite");
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  /* ---------------------------------------------------------------------
+     ÁREA DE TRANSFERÊNCIA
+     --------------------------------------------------------------------- */
+  function fallbackCopy(text, toastMsg){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try{
+      document.execCommand("copy");
+      showToast(toastMsg);
+    } catch(e){
+      showToast("Não foi possível copiar. Copia manualmente.");
+    }
+    document.body.removeChild(ta);
+  }
+  function copyToClipboard(text, toastMsg){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(
+        () => showToast(toastMsg),
+        () => fallbackCopy(text, toastMsg)
+      );
+    } else {
+      fallbackCopy(text, toastMsg);
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     TEMA — claro / escuro / segue o sistema, persistido em localStorage
+     --------------------------------------------------------------------- */
+  function getStoredTheme(){
+    return localStorage.getItem(LS_KEYS.theme) || "";
+  }
+  function applyTheme(theme){
+    if(theme === "dark" || theme === "light"){
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+    const btn = document.getElementById("btnThemeToggle");
+    if(btn){
+      const isDark = theme === "dark" ||
+        (theme !== "light" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      btn.textContent = isDark ? "☀️" : "🌙";
+      btn.title = isDark ? "Mudar para tema claro" : "Mudar para tema escuro";
+    }
+  }
+  function toggleTheme(){
+    const current = getStoredTheme();
+    const isDark = current === "dark" ||
+      (current !== "light" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = isDark ? "light" : "dark";
+    localStorage.setItem(LS_KEYS.theme, next);
+    applyTheme(next);
+  }
+
+  /* ---------------------------------------------------------------------
+     DESTAQUE DE TERMOS DE PESQUISA
+     --------------------------------------------------------------------- */
+  function highlightTerms(text, terms){
+    let html = escapeHtml(text);
+    const uniqueTerms = Array.from(new Set(terms.filter(t => t && t.length > 1)))
+      .sort((a, b) => b.length - a.length);
+    uniqueTerms.forEach(term => {
+      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp("(" + escapedTerm + ")", "gi");
+      html = html.replace(re, "<mark>$1</mark>");
+    });
+    return html;
+  }
+
+  /* ---------------------------------------------------------------------
+     FAVORITOS E VISTOS RECENTEMENTE — persistidos em localStorage
+     --------------------------------------------------------------------- */
+  function getList(key){
+    try{ return JSON.parse(localStorage.getItem(key) || "[]"); } catch(e){ return []; }
+  }
+  function setList(key, list){
+    localStorage.setItem(key, JSON.stringify(list));
+  }
+  function pushRecent(catId, subId){
+    let list = getList(LS_KEYS.recent).filter(i => !(i.catId === catId && i.subId === subId));
+    list.unshift({catId, subId});
+    list = list.slice(0, 5);
+    setList(LS_KEYS.recent, list);
+    renderSideLists();
+  }
+  function isFavorite(catId, subId){
+    return getList(LS_KEYS.favorites).some(i => i.catId === catId && i.subId === subId);
+  }
+  function toggleFavorite(catId, subId){
+    let list = getList(LS_KEYS.favorites);
+    if(isFavorite(catId, subId)){
+      list = list.filter(i => !(i.catId === catId && i.subId === subId));
+      showToast("Removido dos favoritos.");
+    } else {
+      list.unshift({catId, subId});
+      showToast("Adicionado aos favoritos.");
+    }
+    setList(LS_KEYS.favorites, list);
+    renderSideLists();
+  }
+  function renderSideLists(){
+    const container = document.getElementById("sideLists");
+    if(!container) return;
+
+    function renderGroup(title, items, emptyHint){
+      if(items.length === 0){
+        return `<div class="side-section"><h3>${title}</h3><div class="empty-hint">${emptyHint}</div></div>`;
+      }
+      const rows = items.map(i => {
+        const found = findCategoryAndSub(i.catId, i.subId);
+        if(!found) return "";
+        return `<li><button type="button" data-cat="${i.catId}" data-sub="${i.subId}">${escapeHtml(found.sub.title)}</button></li>`;
+      }).join("");
+      return `<div class="side-section"><h3>${title}</h3><ul>${rows}</ul></div>`;
+    }
+
+    container.innerHTML =
+      renderGroup("⭐ Favoritos", getList(LS_KEYS.favorites), "Ainda sem favoritos.") +
+      renderGroup("🕘 Recentes", getList(LS_KEYS.recent), "Ainda sem histórico.");
+
+    container.querySelectorAll("button[data-cat]").forEach(btn => {
+      btn.addEventListener("click", () => selectSubtopic(btn.dataset.cat, btn.dataset.sub));
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     FEEDBACK ("Foi útil?") por resolução — persistido em localStorage
+     --------------------------------------------------------------------- */
+  function getFeedback(catId, subId){
+    let all = {};
+    try{ all = JSON.parse(localStorage.getItem(LS_KEYS.feedback) || "{}"); } catch(e){}
+    return all[catId + "/" + subId] || {up: 0, down: 0, voted: null};
+  }
+  function setVote(catId, subId, vote){
+    let all = {};
+    try{ all = JSON.parse(localStorage.getItem(LS_KEYS.feedback) || "{}"); } catch(e){}
+    const key = catId + "/" + subId;
+    const current = all[key] || {up: 0, down: 0, voted: null};
+    if(current.voted !== vote){
+      if(current.voted === "up") current.up = Math.max(0, current.up - 1);
+      if(current.voted === "down") current.down = Math.max(0, current.down - 1);
+      if(vote === "up") current.up += 1;
+      if(vote === "down") current.down += 1;
+      current.voted = vote;
+    }
+    all[key] = current;
+    localStorage.setItem(LS_KEYS.feedback, JSON.stringify(all));
+    return current;
+  }
+  function wireFeedbackButtons(catId, subId){
+    const fb = getFeedback(catId, subId);
+    const upBtn = document.getElementById("btnFeedbackUp");
+    const downBtn = document.getElementById("btnFeedbackDown");
+    const upCount = document.getElementById("fbUpCount");
+    const downCount = document.getElementById("fbDownCount");
+    if(!upBtn || !downBtn) return;
+
+    upCount.textContent = fb.up || "";
+    downCount.textContent = fb.down || "";
+    upBtn.classList.toggle("active", fb.voted === "up");
+    downBtn.classList.toggle("active", fb.voted === "down");
+
+    upBtn.addEventListener("click", () => {
+      const updated = setVote(catId, subId, "up");
+      upCount.textContent = updated.up || "";
+      downCount.textContent = updated.down || "";
+      upBtn.classList.add("active");
+      downBtn.classList.remove("active");
+      showToast("Obrigado pelo feedback!");
+    });
+    downBtn.addEventListener("click", () => {
+      const updated = setVote(catId, subId, "down");
+      upCount.textContent = updated.up || "";
+      downCount.textContent = updated.down || "";
+      downBtn.classList.add("active");
+      upBtn.classList.remove("active");
+      showToast("Obrigado pelo feedback!");
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     LIGAÇÕES DIRETAS (URL#categoria/subtopico) — partilháveis, com
+     suporte a avançar/recuar do browser
+     --------------------------------------------------------------------- */
+  function updateHash(catId, subId){
+    const newHash = "#" + catId + "/" + subId;
+    if(location.hash !== newHash){
+      history.pushState(null, "", newHash);
+    }
+  }
+  function parseHash(){
+    const h = location.hash.replace(/^#/, "");
+    if(!h) return null;
+    const parts = h.split("/");
+    if(parts.length !== 2 || !parts[0] || !parts[1]) return null;
+    return {catId: parts[0], subId: parts[1]};
+  }
+  function applyHashRoute(){
+    const h = parseHash();
+    if(h && findCategoryAndSub(h.catId, h.subId)){
+      selectSubtopic(h.catId, h.subId, {skipHash: true});
+      return true;
+    }
+    return false;
+  }
+
+  /* ---------------------------------------------------------------------
+     ATALHOS DE TECLADO
+     --------------------------------------------------------------------- */
+  function wireKeyboardShortcuts(){
+    document.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      const typing = tag === "INPUT" || tag === "TEXTAREA";
+
+      if((e.key === "/" && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")){
+        e.preventDefault();
+        const input = document.getElementById("searchInput");
+        input.focus();
+        input.select();
+        return;
+      }
+      if(e.key === "Escape"){
+        const input = document.getElementById("searchInput");
+        if(document.activeElement === input && input.value){
+          input.value = "";
+          if(state.selected){ renderResolution(state.selected.catId, state.selected.subId); }
+          else { renderWelcome(); }
+        } else if(document.activeElement === input){
+          input.blur();
+        }
+      }
+    });
   }
 
   /* ---------------------------------------------------------------------
@@ -780,6 +1163,8 @@
     const content = document.getElementById("content");
     if(!found){ renderWelcome(); return; }
     const {cat, sub} = found;
+    const fav = isFavorite(catId, subId);
+    const fb = getFeedback(catId, subId);
 
     content.innerHTML = `
       <div class="breadcrumb">${escapeHtml(cat.name)}<span class="sep">/</span><strong>${escapeHtml(sub.title)}</strong></div>
@@ -792,17 +1177,47 @@
         <div class="tag-row">
           ${(sub.keywords||[]).slice(0,6).map(k => `<span class="tag">${escapeHtml(k)}</span>`).join("")}
         </div>
+        <div class="resolution-toolbar">
+          <button type="button" class="icon-text-btn" id="btnCopySteps">📋 Copiar passos</button>
+          <button type="button" class="icon-text-btn" id="btnCopyLink">🔗 Copiar link</button>
+          <button type="button" class="icon-text-btn" id="btnPrint">🖨️ Imprimir</button>
+          <button type="button" class="icon-text-btn ${fav ? "active" : ""}" id="btnFavorite">${fav ? "⭐ Favorito" : "☆ Adicionar aos favoritos"}</button>
+          <div class="feedback-row">
+            <span class="label">Foi útil?</span>
+            <button type="button" class="icon-text-btn" id="btnFeedbackUp">👍 <span id="fbUpCount">${fb.up || ""}</span></button>
+            <button type="button" class="icon-text-btn" id="btnFeedbackDown">👎 <span id="fbDownCount">${fb.down || ""}</span></button>
+          </div>
+        </div>
       </div>
       ${state.mode === "online" ? renderAiSectionHtml() : ""}
     `;
+
+    document.getElementById("btnCopySteps").addEventListener("click", () => {
+      const text = sub.title + "\n\n" + sub.steps.map((s, i) => (i + 1) + ". " + s).join("\n");
+      copyToClipboard(text, "Passos copiados!");
+    });
+    document.getElementById("btnCopyLink").addEventListener("click", () => {
+      const url = location.origin + location.pathname + "#" + catId + "/" + subId;
+      copyToClipboard(url, "Link copiado!");
+    });
+    document.getElementById("btnPrint").addEventListener("click", () => window.print());
+    document.getElementById("btnFavorite").addEventListener("click", () => {
+      toggleFavorite(catId, subId);
+      renderResolution(catId, subId);
+    });
+    wireFeedbackButtons(catId, subId);
+
     if(state.mode === "online") wireAiSection();
   }
 
-  function selectSubtopic(catId, subId){
+  function selectSubtopic(catId, subId, opts){
+    opts = opts || {};
     state.selected = {catId, subId};
     markSelectedInTree(catId, subId);
     renderResolution(catId, subId);
     document.getElementById("searchInput").value = "";
+    pushRecent(catId, subId);
+    if(!opts.skipHash) updateHash(catId, subId);
   }
 
   /* ---------------------------------------------------------------------
@@ -811,6 +1226,7 @@
   function renderSearchResults(query){
     const content = document.getElementById("content");
     const results = searchLocal(query);
+    const rawTerms = query.trim().split(/\s+/).filter(Boolean);
 
     if(results.length > 0){
       content.innerHTML = `
@@ -819,8 +1235,8 @@
           ${results.map(r => `
             <button type="button" class="result-item" data-cat="${r.cat.id}" data-sub="${r.sub.id}">
               <div class="path">${escapeHtml(r.cat.name)}</div>
-              <div class="title">${escapeHtml(r.sub.title)}</div>
-              <div class="snippet">${escapeHtml(r.sub.summary)}</div>
+              <div class="title">${highlightTerms(r.sub.title, rawTerms)}</div>
+              <div class="snippet">${highlightTerms(r.sub.summary, rawTerms)}</div>
             </button>
           `).join("")}
         </div>
@@ -928,6 +1344,8 @@
             <span class="dot"></span>
             <span>Chave guardada localmente:</span>
             <span class="masked">${escapeHtml(maskKey(key))}</span>
+            <button type="button" class="btn secondary" id="btnTestKey">Testar chave</button>
+            <span id="testKeyResult" class="mono" style="font-size:12px;"></span>
             <button type="button" class="btn danger" id="btnClearKey">Remover chave</button>
           </div>
         </div>
@@ -953,6 +1371,10 @@
         ${keyCardHtml}
         ${key ? `
         <div class="chat-panel" id="chatPanel">
+          <div class="chat-actions-row">
+            <button type="button" class="btn secondary" id="btnStopChat" style="display:none;">⏹️ Parar</button>
+            <button type="button" class="btn secondary" id="btnClearChat">🗑️ Limpar conversa</button>
+          </div>
           <div class="chat-log" id="chatLog"></div>
           <div class="chat-typing" id="chatTyping">A pensar…</div>
           <div class="chat-input-row">
@@ -982,7 +1404,31 @@
         if(confirm("Remover a chave de API guardada neste browser?")){
           clearApiKey();
           state.chatHistory = [];
+          sessionStorage.removeItem(LS_KEYS.chatSession);
           rerenderCurrentPanelKeepingChat();
+        }
+      });
+    }
+    const testBtn = document.getElementById("btnTestKey");
+    if(testBtn){
+      testBtn.addEventListener("click", testApiKey);
+    }
+
+    const stopBtn = document.getElementById("btnStopChat");
+    if(stopBtn){
+      stopBtn.addEventListener("click", () => {
+        if(state.abortController) state.abortController.abort();
+      });
+    }
+    const clearChatBtn = document.getElementById("btnClearChat");
+    if(clearChatBtn){
+      clearChatBtn.addEventListener("click", () => {
+        if(state.chatHistory.length === 0) return;
+        if(confirm("Limpar toda a conversa desta sessão?")){
+          state.chatHistory = [];
+          sessionStorage.removeItem(LS_KEYS.chatSession);
+          renderChatHistory();
+          showToast("Conversa limpa.");
         }
       });
     }
@@ -991,7 +1437,7 @@
     const chatInput = document.getElementById("chatInput");
     if(sendBtn && chatInput){
       renderChatHistory();
-      sendBtn.addEventListener("click", handleSendChat);
+      sendBtn.addEventListener("click", () => handleSendChat());
       chatInput.addEventListener("keydown", (e) => {
         if(e.key === "Enter" && !e.shiftKey){
           e.preventDefault();
@@ -1022,7 +1468,7 @@
 
   function appendChatBubble(role, htmlOrText, isHtml){
     const log = document.getElementById("chatLog");
-    if(!log) return;
+    if(!log) return null;
     const wrap = document.createElement("div");
     wrap.className = "chat-msg " + role;
     const label = {
@@ -1030,11 +1476,50 @@
     }[role] || role;
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    if(isHtml){ bubble.innerHTML = htmlOrText; } else { bubble.textContent = htmlOrText; }
+    if(isHtml){
+      bubble.innerHTML = htmlOrText;
+    } else if(role === "assistant"){
+      bubble.innerHTML = renderMarkdown(htmlOrText);
+    } else {
+      bubble.textContent = htmlOrText;
+    }
     wrap.innerHTML = `<div class="role-label">${label}</div>`;
     wrap.appendChild(bubble);
     log.appendChild(wrap);
     log.scrollTop = log.scrollHeight;
+    return {wrap, bubble};
+  }
+
+  /* ---------------------------------------------------------------------
+     MARKDOWN BÁSICO — renderização simples e segura (escapa HTML primeiro)
+     das respostas da IA: negrito, itálico, código, links e listas.
+     --------------------------------------------------------------------- */
+  function renderMarkdown(text){
+    let html = escapeHtml(text);
+    html = html.replace(/```([\s\S]*?)```/g, (m, code) => "<pre><code>" + code.replace(/^\n/, "") + "</code></pre>");
+    html = html.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    html = html.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    html = html.replace(/(^|\n)((?:- .+(?:\n|$))+)/g, (m, pre, block) => {
+      const items = block.replace(/\n$/, "").split("\n").map(l => "<li>" + l.replace(/^- /, "") + "</li>").join("");
+      return pre + "<ul>" + items + "</ul>";
+    });
+    return html;
+  }
+
+  /* ---------------------------------------------------------------------
+     PERSISTÊNCIA DO CHAT NA SESSÃO — sessionStorage (limpa ao fechar o
+     separador; propositadamente não usa localStorage, por privacidade)
+     --------------------------------------------------------------------- */
+  function persistChatSession(){
+    try{ sessionStorage.setItem(LS_KEYS.chatSession, JSON.stringify(state.chatHistory)); } catch(e){}
+  }
+  function loadChatSession(){
+    try{
+      const raw = sessionStorage.getItem(LS_KEYS.chatSession);
+      if(raw) state.chatHistory = JSON.parse(raw);
+    } catch(e){ state.chatHistory = []; }
   }
 
   function handleSendChat(forceAi){
@@ -1047,6 +1532,7 @@
     chatInput.style.height = "auto";
 
     state.chatHistory.push({role:"user", content:text});
+    persistChatSession();
     appendChatBubble("user", text, false);
 
     if(!forceAi){
@@ -1094,11 +1580,136 @@
 
     setTyping(true);
     const sendBtn = document.getElementById("btnSendChat");
+    const stopBtn = document.getElementById("btnStopChat");
     if(sendBtn) sendBtn.disabled = true;
+    if(stopBtn) stopBtn.style.display = "inline-flex";
 
     const messages = state.chatHistory
       .filter(m => m.role === "user" || m.role === "assistant")
       .map(m => ({role: m.role, content: m.content}));
+
+    const controller = new AbortController();
+    state.abortController = controller;
+
+    const streamRef = createStreamingAssistantBubble();
+    let fullText = "";
+
+    fetch(AI_CONFIG.apiEndpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": AI_CONFIG.apiVersion,
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.model,
+        max_tokens: AI_CONFIG.maxTokens,
+        system: AI_CONFIG.systemPrompt,
+        messages: messages,
+        stream: true
+      })
+    })
+    .then(async (res) => {
+      if(!res.ok){
+        const bodyText = await res.text();
+        let body = {};
+        try{ body = JSON.parse(bodyText); } catch(e){ /* resposta não-JSON */ }
+        throw {status: res.status, body};
+      }
+      setTyping(false);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while(true){
+        const {done, value} = await reader.read();
+        if(done) break;
+        buffer += decoder.decode(value, {stream: true});
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // guarda a linha incompleta para o próximo pedaço
+
+        for(const line of lines){
+          if(!line.startsWith("data:")) continue;
+          const dataStr = line.slice(5).trim();
+          if(!dataStr) continue;
+          let evt;
+          try{ evt = JSON.parse(dataStr); } catch(e){ continue; }
+
+          if(evt.type === "content_block_delta" && evt.delta && evt.delta.type === "text_delta"){
+            fullText += evt.delta.text;
+            updateStreamingAssistantBubble(streamRef, fullText, true);
+          } else if(evt.type === "error"){
+            throw {status: 0, body: {error: evt.error}};
+          }
+        }
+      }
+    })
+    .then(() => {
+      updateStreamingAssistantBubble(streamRef, fullText, false);
+      if(fullText){
+        state.chatHistory.push({role: "assistant", content: fullText});
+        persistChatSession();
+      } else {
+        streamRef.wrap.remove();
+      }
+    })
+    .catch(err => {
+      if(err && err.name === "AbortError"){
+        updateStreamingAssistantBubble(streamRef, fullText, false);
+        if(fullText){
+          state.chatHistory.push({role: "assistant", content: fullText + "\n\n_(interrompido pelo utilizador)_"});
+          persistChatSession();
+        } else {
+          streamRef.wrap.remove();
+        }
+        return;
+      }
+      streamRef.wrap.remove();
+      appendChatBubble("error", formatApiError(err), false);
+    })
+    .finally(() => {
+      setTyping(false);
+      if(sendBtn) sendBtn.disabled = false;
+      if(stopBtn) stopBtn.style.display = "none";
+      state.abortController = null;
+    });
+  }
+
+  function createStreamingAssistantBubble(){
+    const log = document.getElementById("chatLog");
+    const wrap = document.createElement("div");
+    wrap.className = "chat-msg assistant";
+    wrap.innerHTML = `<div class="role-label">Assistente IA</div>`;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble cursor-blink";
+    wrap.appendChild(bubble);
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+    return {wrap, bubble};
+  }
+  function updateStreamingAssistantBubble(ref, text, streaming){
+    ref.bubble.innerHTML = renderMarkdown(text);
+    ref.bubble.classList.toggle("cursor-blink", streaming);
+    const log = document.getElementById("chatLog");
+    log.scrollTop = log.scrollHeight;
+  }
+
+  /* ---------------------------------------------------------------------
+     TESTAR CHAVE — pedido mínimo (max_tokens:1) só para validar a chave
+     sem gastar praticamente nenhum token
+     --------------------------------------------------------------------- */
+  function testApiKey(){
+    const key = getApiKey();
+    const resultEl = document.getElementById("testKeyResult");
+    const testBtn = document.getElementById("btnTestKey");
+    if(!key || !resultEl) return;
+
+    testBtn.disabled = true;
+    resultEl.textContent = "A testar…";
+    resultEl.style.color = "var(--color-text-muted)";
 
     fetch(AI_CONFIG.apiEndpoint, {
       method: "POST",
@@ -1110,32 +1721,26 @@
       },
       body: JSON.stringify({
         model: AI_CONFIG.model,
-        max_tokens: AI_CONFIG.maxTokens,
-        system: AI_CONFIG.systemPrompt,
-        messages: messages
+        max_tokens: 1,
+        messages: [{role: "user", content: "ok"}]
       })
     })
     .then(async (res) => {
-      const bodyText = await res.text();
-      let body = {};
-      try{ body = JSON.parse(bodyText); } catch(e){ /* resposta não-JSON */ }
-
       if(!res.ok){
+        const bodyText = await res.text();
+        let body = {};
+        try{ body = JSON.parse(bodyText); } catch(e){ /* resposta não-JSON */ }
         throw {status: res.status, body};
       }
-      return body;
-    })
-    .then(body => {
-      const reply = (body.content && body.content[0] && body.content[0].text) || "(sem resposta)";
-      state.chatHistory.push({role:"assistant", content:reply});
-      appendChatBubble("assistant", reply, false);
+      resultEl.textContent = "✓ Chave válida.";
+      resultEl.style.color = "var(--success)";
     })
     .catch(err => {
-      appendChatBubble("error", formatApiError(err), false);
+      resultEl.textContent = "✗ " + formatApiError(err);
+      resultEl.style.color = "var(--danger)";
     })
     .finally(() => {
-      setTyping(false);
-      if(sendBtn) sendBtn.disabled = false;
+      testBtn.disabled = false;
     });
   }
 
@@ -1148,6 +1753,9 @@
 
     if(status === 401){
       return "Chave de API inválida ou sem permissões. Verifica se colaste a chave corretamente (remove-a e adiciona de novo, se necessário).";
+    }
+    if(status === 0){
+      return "A IA interrompeu a resposta a meio" + (apiMsg ? (": " + apiMsg) : ".") + " Tenta novamente.";
     }
     if(status === 429){
       return "Limite de pedidos atingido (rate limit) na tua conta Anthropic. Aguarda um pouco e tenta novamente.";
@@ -1188,6 +1796,51 @@
     });
   }
 
+  /* ---------------------------------------------------------------------
+     APAGAR TODOS OS DADOS LOCAIS — estilo RGPD: um único botão para
+     remover tudo o que a app guardou neste browser
+     --------------------------------------------------------------------- */
+  function clearAllLocalData(){
+    const ok = confirm(
+      "Isto vai apagar do teu browser: a chave de API guardada, favoritos, " +
+      "vistos recentemente, feedback e preferências de modo/tema.\n\n" +
+      "Esta ação não pode ser desfeita. Continuar?"
+    );
+    if(!ok) return;
+    Object.keys(localStorage).forEach(k => {
+      if(k.indexOf("resolveflow_") === 0) localStorage.removeItem(k);
+    });
+    sessionStorage.removeItem(LS_KEYS.chatSession);
+    showToast("Todos os dados locais foram apagados.");
+    setTimeout(() => location.reload(), 700);
+  }
+
+  /* ---------------------------------------------------------------------
+     SINCRONIZAÇÃO ENTRE SEPARADORES — se mudares o modo, a chave ou o
+     tema noutro separador aberto, este atualiza-se sozinho
+     --------------------------------------------------------------------- */
+  function handleStorageSync(e){
+    if(e.key === LS_KEYS.mode){
+      const newMode = e.newValue === "online" ? "online" : "offline";
+      if(newMode !== state.mode){
+        state.mode = newMode;
+        document.getElementById("btnModeOffline").classList.toggle("active", newMode === "offline");
+        document.getElementById("btnModeOffline").setAttribute("aria-selected", newMode === "offline");
+        document.getElementById("btnModeOnline").classList.toggle("active", newMode === "online");
+        document.getElementById("btnModeOnline").setAttribute("aria-selected", newMode === "online");
+        updatePrivacyBanner();
+        rerenderCurrentPanelKeepingChat();
+        showToast("Modo atualizado noutro separador.");
+      }
+    } else if(e.key === LS_KEYS.apiKey){
+      rerenderCurrentPanelKeepingChat();
+    } else if(e.key === LS_KEYS.theme){
+      applyTheme(getStoredTheme());
+    } else if(e.key === LS_KEYS.favorites || e.key === LS_KEYS.recent){
+      renderSideLists();
+    }
+  }
+
   /* =========================================================================
      INIT
      ========================================================================= */
@@ -1195,11 +1848,17 @@
     const savedMode = localStorage.getItem(LS_KEYS.mode);
     state.mode = (savedMode === "online") ? "online" : "offline";
 
+    applyTheme(getStoredTheme());
+    loadChatSession();
     renderTree();
+    renderSideLists();
     wireSearch();
+    wireKeyboardShortcuts();
 
     document.getElementById("btnModeOffline").addEventListener("click", () => setMode("offline"));
     document.getElementById("btnModeOnline").addEventListener("click", () => setMode("online"));
+    document.getElementById("btnThemeToggle").addEventListener("click", toggleTheme);
+    document.getElementById("btnClearAllData").addEventListener("click", clearAllLocalData);
 
     document.getElementById("btnModeOffline").classList.toggle("active", state.mode === "offline");
     document.getElementById("btnModeOnline").classList.toggle("active", state.mode === "online");
@@ -1207,7 +1866,13 @@
     document.getElementById("btnModeOnline").setAttribute("aria-selected", state.mode === "online");
 
     updatePrivacyBanner();
-    renderWelcome();
+
+    const routed = applyHashRoute();
+    if(!routed) renderWelcome();
+
+    window.addEventListener("popstate", applyHashRoute);
+    window.addEventListener("hashchange", applyHashRoute);
+    window.addEventListener("storage", handleStorageSync);
   }
 
   document.addEventListener("DOMContentLoaded", init);

@@ -8,6 +8,18 @@ resoluções com passos) e pesquisa por palavra-chave.
 Abre diretamente `index.html` num browser — não precisas de servidor, npm,
 nem ligação à internet para o modo por omissão.
 
+## Funcionalidades
+
+- Árvore de decisão navegável + pesquisa local com destaque dos termos encontrados.
+- Atalhos de teclado: `/` ou `Ctrl+K` foca a pesquisa; `Esc` limpa-a.
+- Tema claro/escuro (segue o sistema por omissão, com botão 🌙/☀️ para forçar).
+- Favoritos ⭐ e "vistos recentemente" 🕘 na barra lateral.
+- Links diretos por URL (`#categoria/subtopico`), partilháveis e com recuar/avançar do browser.
+- Em cada resolução: copiar passos, copiar link, imprimir, marcar como favorito e votar "Foi útil? 👍/👎".
+- Modo Online (IA): respostas em streaming, com Markdown básico, botão "Parar", "Limpar conversa", "Testar chave" e conversa persistida apenas durante a sessão do separador (`sessionStorage`).
+- Sincronização automática entre separadores abertos (modo, chave e tema).
+- Botão único no rodapé para apagar todos os dados locais da app.
+
 ## Modos de funcionamento
 
 O seletor de modo está no cabeçalho. A escolha fica guardada no
