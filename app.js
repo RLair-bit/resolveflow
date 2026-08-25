@@ -44,7 +44,7 @@
      --------------------------------------------------------------------- */
   const TREE = [
     {
-      id: "conta", name: "Conta e Acesso", emoji: "🔐",
+      id: "conta", name: "Conta e Acesso", emoji: "🔐", color: "#007AFF",
       subtopics: [
         {
           id: "login-falha", title: "Não consigo iniciar sessão",
@@ -85,7 +85,7 @@
       ]
     },
     {
-      id: "faturacao", name: "Faturação e Pagamentos", emoji: "💳",
+      id: "faturacao", name: "Faturação e Pagamentos", emoji: "💳", color: "#34C759",
       subtopics: [
         {
           id: "pagamento-recusado", title: "Pagamento recusado",
@@ -126,7 +126,7 @@
       ]
     },
     {
-      id: "produto", name: "Produto / Serviço", emoji: "🛠️",
+      id: "produto", name: "Produto / Serviço", emoji: "🛠️", color: "#5856D6",
       subtopics: [
         {
           id: "produto-nao-funciona", title: "Produto não funciona",
@@ -167,7 +167,7 @@
       ]
     },
     {
-      id: "entregas", name: "Entregas e Encomendas", emoji: "📦",
+      id: "entregas", name: "Entregas e Encomendas", emoji: "📦", color: "#FF9500",
       subtopics: [
         {
           id: "encomenda-atrasada", title: "Encomenda atrasada",
@@ -208,7 +208,7 @@
       ]
     },
     {
-      id: "cancelamentos", name: "Cancelamentos e Devoluções", emoji: "↩️",
+      id: "cancelamentos", name: "Cancelamentos e Devoluções", emoji: "↩️", color: "#FF3B30",
       subtopics: [
         {
           id: "cancelar-subscricao", title: "Cancelar subscrição",
@@ -418,7 +418,9 @@
       const rows = items.map(i => {
         const found = findCategoryAndSub(i.catId, i.subId);
         if(!found) return "";
-        return `<li><button type="button" data-cat="${i.catId}" data-sub="${i.subId}">${escapeHtml(found.sub.title)}</button></li>`;
+        return `<li><button type="button" data-cat="${i.catId}" data-sub="${i.subId}">` +
+          `<span class="icon-badge" style="background:${found.cat.color}">${found.cat.emoji}</span>` +
+          `<span>${escapeHtml(found.sub.title)}</span><span class="chevron">›</span></button></li>`;
       }).join("");
       return `<div class="side-section"><h3>${title}</h3><ul>${rows}</ul></div>`;
     }
@@ -587,7 +589,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "category-btn";
-      btn.innerHTML = `<span class="emoji">${cat.emoji}</span><span>${escapeHtml(cat.name)}</span><span class="chev">▶</span>`;
+      btn.innerHTML = `<span class="icon-badge" style="background:${cat.color}">${cat.emoji}</span><span>${escapeHtml(cat.name)}</span><span class="chev">▶</span>`;
       btn.addEventListener("click", () => {
         wrap.classList.toggle("open");
       });
@@ -598,7 +600,7 @@
         const li = document.createElement("li");
         const subBtn = document.createElement("button");
         subBtn.type = "button";
-        subBtn.textContent = sub.title;
+        subBtn.innerHTML = `<span>${escapeHtml(sub.title)}</span><span class="chevron">›</span>`;
         subBtn.dataset.catId = cat.id;
         subBtn.dataset.subId = sub.id;
         subBtn.addEventListener("click", () => selectSubtopic(cat.id, sub.id));
@@ -714,13 +716,19 @@
       content.innerHTML = `
         <div class="search-results">
           <h3>Resultados para "${escapeHtml(query)}"</h3>
-          ${results.map(r => `
-            <button type="button" class="result-item" data-cat="${r.cat.id}" data-sub="${r.sub.id}">
-              <div class="path">${escapeHtml(r.cat.name)}</div>
-              <div class="title">${highlightTerms(r.sub.title, rawTerms)}</div>
-              <div class="snippet">${highlightTerms(r.sub.summary, rawTerms)}</div>
-            </button>
-          `).join("")}
+          <div class="search-results-group">
+            ${results.map(r => `
+              <button type="button" class="result-item" data-cat="${r.cat.id}" data-sub="${r.sub.id}">
+                <span class="icon-badge" style="background:${r.cat.color}">${r.cat.emoji}</span>
+                <span class="result-text">
+                  <div class="path">${escapeHtml(r.cat.name)}</div>
+                  <div class="title">${highlightTerms(r.sub.title, rawTerms)}</div>
+                  <div class="snippet">${highlightTerms(r.sub.summary, rawTerms)}</div>
+                </span>
+                <span class="chevron">›</span>
+              </button>
+            `).join("")}
+          </div>
         </div>
         ${state.mode === "online" ? renderAiSectionHtml() : ""}
       `;
