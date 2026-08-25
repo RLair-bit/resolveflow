@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResolveFlow — Apoio ao Cliente</title>
+<meta name="description" content="Ferramenta pessoal open-source de apoio ao cliente: árvore de decisão navegável, pesquisa local e assistente de IA opcional.">
+<style>
+  :root{
+    --color-bg:#f5f6fa;
+    --color-surface:#ffffff;
+    --color-surface-2:#eef0f6;
+    --color-border:#e1e4ea;
+    --color-text:#1b1f27;
+    --color-text-muted:#5b6472;
+    --color-header-bg:#12141c;
+    --color-header-bg-2:#1b1e2a;
+    --color-header-text:#f5f6fa;
+    --color-header-text-muted:#9aa0b4;
+    --accent:#2D5BE3;
+    --accent-hover:#234ac2;
+    --accent-soft:rgba(45,91,227,0.10);
+    --accent-soft-2:rgba(45,91,227,0.18);
+    --success:#1c8a53;
+    --success-bg:#e7f6ee;
+    --danger:#c0392b;
+    --danger-bg:#fdecea;
+    --warning-bg:#fff6e0;
+    --warning-border:#f0c852;
+    --warning-text:#7a5b00;
+    --radius:10px;
+    --radius-sm:6px;
+    --shadow:0 2px 10px rgba(20,22,30,0.06);
+    --shadow-lg:0 12px 30px rgba(20,22,30,0.14);
+    --font-display:'Space Grotesk','Segoe UI',system-ui,sans-serif;
+    --font-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono','Consolas',monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--color-bg);
+    color:var(--color-text);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3,h4{font-family:var(--font-display); margin:0 0 .5em 0;}
+  button{font-family:inherit; cursor:pointer;}
+  a{color:var(--accent);}
+  code, .mono{font-family:var(--font-mono);}
+
+  /* ---------- Layout shell ---------- */
+  .app{display:flex; flex-direction:column; min-height:100vh;}
+
+  /* ---------- Header ---------- */
+  header.app-header{
+    background:linear-gradient(180deg,var(--color-header-bg),var(--color-header-bg-2));
+    color:var(--color-header-text);
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .brand{display:flex; align-items:center; gap:10px; margin-right:auto;}
+  .brand .logo{
+    width:34px; height:34px; border-radius:9px;
+    background:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; color:#fff; font-size:16px;
+    flex:none;
+  }
+  .brand .title{font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:.2px;}
+  .brand .subtitle{font-size:11.5px; color:var(--color-header-text-muted); margin-top:1px;}
+
+  .header-search{
+    flex:1 1 320px;
+    max-width:460px;
+    position:relative;
+  }
+  .header-search input{
+    width:100%;
+    padding:9px 12px 9px 34px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.08);
+    color:var(--color-header-text);
+    font-size:14px;
+    outline:none;
+    transition:background .15s, border-color .15s;
+  }
+  .header-search input::placeholder{color:var(--color-header-text-muted);}
+  .header-search input:focus{background:rgba(255,255,255,0.14); border-color:var(--accent);}
+  .header-search .icon{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    color:var(--color-header-text-muted); font-size:14px; pointer-events:none;
+  }
+
+  /* Mode toggle */
+  .mode-toggle{
+    display:flex;
+    align-items:center;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:999px;
+    padding:3px;
+    gap:2px;
+    flex:none;
+  }
+  .mode-toggle button{
+    border:none;
+    background:transparent;
+    color:var(--color-header-text-muted);
+    font-size:12.5px;
+    font-weight:600;
+    padding:7px 13px;
+    border-radius:999px;
+    transition:background .15s, color .15s;
+    white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+  }
+  .mode-toggle button.active{
+    background:var(--accent);
+    color:#fff;
+  }
+  .mode-toggle button:not(.active):hover{color:#fff;}
+
+  /* ---------- Privacy banner ---------- */
+  .privacy-banner{
+    background:var(--warning-bg);
+    border-bottom:1px solid var(--warning-border);
+    color:var(--warning-text);
+    font-size:12.5px;
+    padding:8px 20px;
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .privacy-banner.online{
+    background:var(--danger-bg);
+    border-bottom-color:#eabdb6;
+    color:#7a2317;
+  }
+  .privacy-banner strong{font-weight:700;}
+  .privacy-banner .ico{flex:none; margin-top:1px;}
+
+  /* ---------- Main layout ---------- */
+  .layout{
+    flex:1;
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:0;
+    max-width:1280px;
+    width:100%;
+    margin:0 auto;
+    align-items:start;
+  }
+  @media (max-width: 860px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  nav.tree{
+    padding:20px 14px 40px 20px;
+    position:sticky;
+    top:0;
+  }
+  @media (max-width: 860px){ nav.tree{position:static;} }
+
+  .tree h2{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--color-text-muted); margin-bottom:10px;}
+
+  .category{margin-bottom:4px;}
+  .category-btn{
+    width:100%;
+    display:flex; align-items:center; gap:8px;
+    background:none; border:none;
+    text-align:left;
+    padding:9px 10px;
+    border-radius:var(--radius-sm);
+    font-size:14px; font-weight:600;
+    color:var(--color-text);
+  }
+  .category-btn:hover{background:var(--color-surface-2);}
+  .category-btn .chev{
+    margin-left:auto; font-size:10px; color:var(--color-text-muted);
+    transition:transform .15s;
+  }
+  .category.open .category-btn .chev{transform:rotate(90deg);}
+  .category-btn .emoji{font-size:15px;}
+
+  .subtopic-list{list-style:none; margin:2px 0 8px 0; padding:0 0 0 30px; display:none;}
+  .category.open .subtopic-list{display:block;}
+  .subtopic-list li button{
+    width:100%; text-align:left; background:none; border:none;
+    padding:6px 8px; border-radius:var(--radius-sm);
+    font-size:13.5px; color:var(--color-text-muted);
+  }
+  .subtopic-list li button:hover{background:var(--color-surface-2); color:var(--color-text);}
+  .subtopic-list li button.selected{background:var(--accent-soft); color:var(--accent-hover); font-weight:600;}
+
+  /* ---------- Content ---------- */
+  main.content{
+    padding:24px 24px 60px 20px;
+    min-width:0;
+  }
+
+  .breadcrumb{font-size:12.5px; color:var(--color-text-muted); margin-bottom:14px;}
+  .breadcrumb .sep{margin:0 6px;}
+
+  .card{
+    background:var(--color-surface);
+    border:1px solid var(--color-border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px 24px;
+  }
+
+  .welcome ul{padding-left:20px; color:var(--color-text-muted); font-size:14px;}
+  .welcome li{margin-bottom:6px;}
+
+  .resolution-summary{color:var(--color-text-muted); margin-bottom:16px; font-size:14px;}
+  .steps{list-style:none; margin:0; padding:0; counter-reset:step;}
+  .steps li{
+    counter-increment:step;
+    display:flex; gap:12px;
+    padding:10px 0;
+    border-top:1px solid var(--color-border);
+    font-size:14.5px;
+  }
+  .steps li:first-child{border-top:none;}
+  .steps li::before{
+    content:counter(step);
+    flex:none;
+    width:24px; height:24px;
+    background:var(--accent-soft);
+    color:var(--accent-hover);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; font-family:var(--font-display);
+    margin-top:1px;
+  }
+
+  .tag-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:18px;}
+  .tag{
+    font-size:11.5px; background:var(--color-surface-2); color:var(--color-text-muted);
+    padding:3px 9px; border-radius:999px;
+  }
+
+  /* ---------- Search results ---------- */
+  .search-results h3{font-size:14px; margin-bottom:12px;}
+  .result-item{
+    display:block; width:100%; text-align:left;
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:8px;
+    cursor:pointer;
+  }
+  .result-item:hover{border-color:var(--accent); box-shadow:var(--shadow);}
+  .result-item .path{font-size:11.5px; color:var(--color-text-muted); margin-bottom:2px;}
+  .result-item .title{font-weight:600; font-size:14.5px;}
+  .result-item .snippet{font-size:12.5px; color:var(--color-text-muted); margin-top:4px;}
+
+  .no-results-box{
+    background:var(--color-surface); border:1px dashed var(--color-border);
+    border-radius:var(--radius); padding:24px; text-align:center;
+  }
+  .no-results-box p{color:var(--color-text-muted); margin:0 0 14px 0; font-size:14px;}
+  .btn{
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--accent); color:#fff; border:none;
+    padding:9px 16px; border-radius:var(--radius-sm);
+    font-size:13.5px; font-weight:600; text-decoration:none;
+  }
+  .btn:hover{background:var(--accent-hover);}
+  .btn.secondary{background:var(--color-surface-2); color:var(--color-text);}
+  .btn.secondary:hover{background:#e2e5ee;}
+  .btn.danger{background:var(--danger-bg); color:var(--danger);}
+  .btn.danger:hover{background:#f8d9d5;}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+
+  /* ---------- Online / AI section ---------- */
+  .ai-section{margin-top:22px;}
+  .ai-key-card{
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius); padding:20px 22px; margin-bottom:18px;
+  }
+  .ai-key-card h3{font-size:15px;}
+  .ai-key-card p{font-size:13px; color:var(--color-text-muted); margin:0 0 12px 0;}
+  .ai-key-card .row{display:flex; gap:8px; flex-wrap:wrap;}
+  .ai-key-card input[type="password"], .ai-key-card input[type="text"]{
+    flex:1 1 260px;
+    padding:9px 11px; border:1px solid var(--color-border); border-radius:var(--radius-sm);
+    font-family:var(--font-mono); font-size:13px;
+  }
+  .key-status{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    font-size:13px;
+  }
+  .key-status .dot{width:8px; height:8px; border-radius:50%; background:var(--success); flex:none;}
+  .key-status .masked{font-family:var(--font-mono); color:var(--color-text-muted);}
+
+  .chat-panel{
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius); overflow:hidden;
+  }
+  .chat-log{
+    max-height:420px; min-height:120px; overflow-y:auto;
+    padding:18px 20px; display:flex; flex-direction:column; gap:14px;
+  }
+  .chat-msg{max-width:85%; font-size:14px; line-height:1.55;}
+  .chat-msg.user{align-self:flex-end; text-align:right;}
+  .chat-msg .bubble{
+    display:inline-block; padding:10px 14px; border-radius:14px;
+    white-space:pre-wrap; text-align:left;
+  }
+  .chat-msg.user .bubble{background:var(--accent); color:#fff; border-bottom-right-radius:4px;}
+  .chat-msg.assistant .bubble{background:var(--color-surface-2); color:var(--color-text); border-bottom-left-radius:4px;}
+  .chat-msg.system .bubble{background:var(--warning-bg); color:var(--warning-text); border:1px solid var(--warning-border);}
+  .chat-msg.error .bubble{background:var(--danger-bg); color:var(--danger); border:1px solid #eabdb6;}
+  .chat-msg .role-label{font-size:11px; color:var(--color-text-muted); margin-bottom:3px;}
+
+  .suggestion-card{
+    border:1px solid var(--accent-soft-2); background:var(--accent-soft);
+    border-radius:var(--radius-sm); padding:12px 14px; font-size:13.5px;
+  }
+  .suggestion-card .title{font-weight:700; margin-bottom:4px;}
+  .suggestion-card .actions{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+
+  .chat-input-row{
+    display:flex; gap:8px; padding:14px 16px; border-top:1px solid var(--color-border);
+    background:var(--color-surface-2);
+  }
+  .chat-input-row textarea{
+    flex:1; resize:none; border:1px solid var(--color-border); border-radius:var(--radius-sm);
+    padding:9px 11px; font-family:var(--font-body); font-size:14px; min-height:42px; max-height:140px;
+  }
+  .chat-typing{font-size:12.5px; color:var(--color-text-muted); padding:0 20px 10px 20px; display:none;}
+  .chat-typing.active{display:block;}
+
+  .hidden{display:none !important;}
+
+  footer.app-footer{
+    text-align:center; font-size:12px; color:var(--color-text-muted);
+    padding:20px; border-top:1px solid var(--color-border);
+  }
+  footer.app-footer a{color:var(--color-text-muted); text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo">RF</div>
+      <div>
+        <div class="title">ResolveFlow</div>
+        <div class="subtitle">Apoio ao cliente — árvore de decisão local</div>
+      </div>
+    </div>
+
+    <div class="header-search">
+      <span class="icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Pesquisar por palavra-chave (ex.: password, reembolso, atraso)…" autocomplete="off">
+    </div>
+
+    <div class="mode-toggle" role="tablist" aria-label="Modo de funcionamento">
+      <button type="button" id="btnModeOffline" role="tab" aria-selected="true">
+        <span>🔒</span><span>Offline</span>
+      </button>
+      <button type="button" id="btnModeOnline" role="tab" aria-selected="false">
+        <span>✨</span><span>Online (IA)</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="privacy-banner" id="privacyBanner">
+    <span class="ico">⚠️</span>
+    <span id="privacyBannerText"></span>
+  </div>
+
+  <div class="layout">
+    <nav class="tree" id="treeNav" aria-label="Árvore de categorias">
+      <h2>Categorias</h2>
+      <div id="treeContainer"></div>
+    </nav>
+
+    <main class="content" id="content">
+      <!-- populated by JS -->
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    ResolveFlow — ferramenta pessoal e open-source de apoio ao cliente. Não substitui as políticas de confidencialidade do teu empregador.
+    <br>Consulta o <a href="README.md">README</a> para mais informação sobre os modos e privacidade.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================================
+     CONFIGURAÇÃO — muda aqui o modelo / endpoint da IA se precisares.
+     A chave de API NUNCA é lida a partir daqui: é sempre pedida ao
+     utilizador em runtime e guardada apenas em localStorage do browser.
+     ========================================================================= */
+  const AI_CONFIG = {
+    provider: "anthropic",
+    apiEndpoint: "https://api.anthropic.com/v1/messages",
+    model: "claude-sonnet-5",     // <- muda o modelo Claude aqui
+    apiVersion: "2023-06-01",
+    maxTokens: 1024,
+    systemPrompt:
+      "és um assistente de apoio ao cliente; responde de forma clara, " +
+      "cordial e passo-a-passo, em português europeu. Se a pergunta " +
+      "envolver dados pessoais, credenciais ou informação confidencial, " +
+      "recorda ao utilizador para não partilhar esses dados aqui. " +
+      "Quando fizer sentido, estrutura a resposta em passos numerados."
+  };
+
+  // Chat de IA genérico usado no MODO OFFLINE quando a pesquisa local
+  // não encontra nada. Não é enviada nenhuma pergunta automaticamente —
+  // é apenas aberto um separador novo.
+  const GENERIC_AI_CHAT_URL = "https://claude.ai/new";
+
+  const LS_KEYS = {
+    mode: "resolveflow_mode",           // "offline" | "online"
+    apiKey: "resolveflow_api_key"       // guardada só no browser do utilizador
+  };
+
+  /* ---------------------------------------------------------------------
+     DADOS — árvore de decisão (categorias → sub-tópicos → resolução)
+     --------------------------------------------------------------------- */
+  const TREE = [
+    {
+      id: "conta", name: "Conta e Acesso", emoji: "🔐",
+      subtopics: [
+        {
+          id: "login-falha", title: "Não consigo iniciar sessão",
+          keywords: ["login", "entrar", "sessao", "sessão", "password errada", "acesso negado", "nao consigo entrar"],
+          summary: "Passos para resolver problemas comuns ao iniciar sessão.",
+          steps: [
+            "Confirma que o email ou utilizador está escrito corretamente, sem espaços a mais.",
+            "Sugere recuperar a password através da opção \"Esqueci-me da password\".",
+            "Pede para limpar cache e cookies do browser, ou experimentar uma janela privada.",
+            "Verifica se o Caps Lock não está ativo ao escrever a password.",
+            "Se persistir, confirma se a conta não está temporariamente bloqueada por tentativas falhadas."
+          ]
+        },
+        {
+          id: "esqueci-password", title: "Esqueci-me da password",
+          keywords: ["recuperar password", "reset password", "nova password", "redefinir password", "mudar password"],
+          summary: "Como orientar o cliente a redefinir a password em segurança.",
+          steps: [
+            "Pede ao cliente para aceder à página de login e clicar em \"Esqueci-me da password\".",
+            "Deve introduzir o email associado à conta.",
+            "Pede para verificar a caixa de entrada (e a pasta de spam) para o email de redefinição.",
+            "O cliente segue o link e define uma password nova, com pelo menos 8 caracteres.",
+            "Confirma com o cliente que já consegue iniciar sessão com a nova password."
+          ]
+        },
+        {
+          id: "conta-bloqueada", title: "Conta bloqueada",
+          keywords: ["bloqueada", "suspensa", "demasiadas tentativas", "conta trancada"],
+          summary: "Procedimento de apoio para uma conta bloqueada.",
+          steps: [
+            "Confirma a identidade do cliente através dos dados de verificação habituais da tua organização.",
+            "Explica o motivo do bloqueio (normalmente, demasiadas tentativas de login falhadas).",
+            "Informa que o bloqueio automático costuma expirar sozinho (ex.: 30 minutos).",
+            "Sugere a redefinição da password como medida preventiva depois do desbloqueio.",
+            "Regista o incidente conforme o procedimento interno da tua organização."
+          ]
+        }
+      ]
+    },
+    {
+      id: "faturacao", name: "Faturação e Pagamentos", emoji: "💳",
+      subtopics: [
+        {
+          id: "pagamento-recusado", title: "Pagamento recusado",
+          keywords: ["pagamento recusado", "cartao recusado", "cartão recusado", "erro pagamento", "nao consigo pagar"],
+          summary: "Diagnóstico de um pagamento recusado no checkout.",
+          steps: [
+            "Confirma que os dados do cartão (número, validade, CVV) foram introduzidos corretamente.",
+            "Sugere verificar com o banco se existe limite de compras online ativado.",
+            "Pede para experimentar outro método de pagamento, se disponível.",
+            "Verifica se o valor a debitar excede o saldo ou limite disponível.",
+            "Se o erro persistir, encaminha para o suporte de pagamentos com o horário e mensagem de erro exatos."
+          ]
+        },
+        {
+          id: "fatura-incorreta", title: "Fatura incorreta",
+          keywords: ["fatura errada", "valor errado", "fatura incorreta", "cobranca indevida", "cobrança indevida"],
+          summary: "Como validar e corrigir uma fatura com valores incorretos.",
+          steps: [
+            "Pede o número da fatura e a data de emissão.",
+            "Compara os itens faturados com a encomenda ou subscrição associada.",
+            "Confirma se houve alguma alteração de plano ou promoção não aplicada.",
+            "Se confirmado o erro, emite nota de crédito ou fatura corrigida conforme o processo interno.",
+            "Informa o cliente do prazo estimado para a correção."
+          ]
+        },
+        {
+          id: "pedido-reembolso", title: "Pedido de reembolso",
+          keywords: ["reembolso", "devolver dinheiro", "estorno", "reembolsar"],
+          summary: "Fluxo padrão para tratar um pedido de reembolso.",
+          steps: [
+            "Confirma o motivo do pedido de reembolso junto do cliente.",
+            "Verifica se o pedido está dentro do prazo e condições da política de reembolso.",
+            "Reúne o número de encomenda ou fatura associado.",
+            "Regista o pedido no sistema de gestão e informa o prazo típico de processamento.",
+            "Confirma ao cliente o método pelo qual o valor será devolvido."
+          ]
+        }
+      ]
+    },
+    {
+      id: "produto", name: "Produto / Serviço", emoji: "🛠️",
+      subtopics: [
+        {
+          id: "produto-nao-funciona", title: "Produto não funciona",
+          keywords: ["nao funciona", "não funciona", "avariado", "defeito", "parou de funcionar"],
+          summary: "Diagnóstico inicial para um produto ou serviço que não funciona.",
+          steps: [
+            "Pede uma descrição concreta do problema e desde quando ocorre.",
+            "Sugere reiniciar a aplicação/dispositivo ou atualizar para a versão mais recente.",
+            "Confirma se o problema ocorre em todos os dispositivos ou só num.",
+            "Pede capturas de ecrã ou mensagens de erro, se existirem.",
+            "Se não resolvido, escala para a equipa técnica com os detalhes recolhidos."
+          ]
+        },
+        {
+          id: "falta-funcionalidade", title: "Falta de funcionalidade",
+          keywords: ["funcionalidade em falta", "nao tem opcao", "não tem opção", "falta recurso", "sugestao", "sugestão"],
+          summary: "Como registar um pedido de funcionalidade em falta.",
+          steps: [
+            "Agradece o feedback e confirma que compreendeste bem o pedido.",
+            "Verifica se a funcionalidade já existe de outra forma no produto.",
+            "Regista o pedido no canal de feedback/product backlog da tua organização.",
+            "Informa o cliente que não há prazo garantido, mas que o feedback foi registado.",
+            "Sugere alternativas temporárias, se existirem."
+          ]
+        },
+        {
+          id: "erro-instalar", title: "Erro ao instalar",
+          keywords: ["erro instalacao", "erro instalação", "nao instala", "não instala", "falha instalacao"],
+          summary: "Passos para resolver falhas durante a instalação.",
+          steps: [
+            "Confirma o sistema operativo e a versão usada pelo cliente.",
+            "Pede a mensagem de erro exata apresentada durante a instalação.",
+            "Sugere verificar espaço em disco disponível e permissões de administrador.",
+            "Sugere desativar temporariamente antivírus/firewall que possam bloquear a instalação.",
+            "Se persistir, disponibiliza um instalador alternativo ou escala para suporte técnico."
+          ]
+        }
+      ]
+    },
+    {
+      id: "entregas", name: "Entregas e Encomendas", emoji: "📦",
+      subtopics: [
+        {
+          id: "encomenda-atrasada", title: "Encomenda atrasada",
+          keywords: ["atraso", "atrasada", "ainda nao chegou", "ainda não chegou", "demora entrega"],
+          summary: "Como responder a uma encomenda que está atrasada.",
+          steps: [
+            "Pede o número de encomenda ou de rastreio.",
+            "Consulta o estado atual no sistema de transporte/logística.",
+            "Compara a data prevista de entrega com a data atual.",
+            "Informa o cliente do novo prazo estimado, se disponível.",
+            "Se o atraso for excessivo, oferece as opções previstas na política da tua organização (reenvio, reembolso, etc.)."
+          ]
+        },
+        {
+          id: "encomenda-perdida", title: "Encomenda perdida",
+          keywords: ["encomenda perdida", "nao chegou", "não chegou", "extraviada", "desapareceu"],
+          summary: "Procedimento para uma encomenda dada como perdida.",
+          steps: [
+            "Confirma o número de encomenda e a morada de entrega.",
+            "Verifica junto da transportadora o último estado registado.",
+            "Confirma se passou o prazo máximo de entrega considerado \"perdida\" pela tua política.",
+            "Abre um processo de reclamação junto da transportadora, se aplicável.",
+            "Propõe reenvio ou reembolso ao cliente, conforme a política interna."
+          ]
+        },
+        {
+          id: "artigo-danificado", title: "Artigo danificado",
+          keywords: ["danificado", "partido", "chegou partido", "veio estragado"],
+          summary: "Como tratar um artigo que chegou danificado.",
+          steps: [
+            "Pede fotos do artigo e da embalagem, se possível.",
+            "Confirma o número de encomenda associado.",
+            "Verifica se o dano foi causado no transporte ou é defeito de fabrico.",
+            "Regista o pedido de substituição ou reembolso conforme a política aplicável.",
+            "Informa o cliente do prazo estimado para resolução."
+          ]
+        }
+      ]
+    },
+    {
+      id: "cancelamentos", name: "Cancelamentos e Devoluções", emoji: "↩️",
+      subtopics: [
+        {
+          id: "cancelar-subscricao", title: "Cancelar subscrição",
+          keywords: ["cancelar subscricao", "cancelar subscrição", "cancelar plano", "terminar assinatura"],
+          summary: "Fluxo para cancelar uma subscrição ativa.",
+          steps: [
+            "Confirma qual o plano/subscrição que o cliente pretende cancelar.",
+            "Explica as condições de cancelamento (ex.: efetivo no fim do período pago).",
+            "Confirma se há penalizações ou valores a reembolsar.",
+            "Processa o cancelamento no sistema de gestão de subscrições.",
+            "Envia confirmação por escrito ao cliente."
+          ]
+        },
+        {
+          id: "devolver-produto", title: "Devolver produto",
+          keywords: ["devolucao", "devolução", "devolver produto", "quero devolver"],
+          summary: "Como orientar uma devolução de produto.",
+          steps: [
+            "Confirma o motivo da devolução e o número de encomenda.",
+            "Verifica se está dentro do prazo legal/da política de devolução.",
+            "Explica o processo de envio de devolução (etiqueta, morada, prazo).",
+            "Informa como e quando o reembolso ou troca será processado.",
+            "Regista o pedido no sistema para acompanhamento."
+          ]
+        },
+        {
+          id: "politica-devolucao", title: "Política de devolução",
+          keywords: ["politica devolucao", "política de devolução", "prazo devolucao", "condicoes devolucao"],
+          summary: "Esclarecimentos comuns sobre a política de devolução.",
+          steps: [
+            "Explica o prazo geral de devolução aplicável (ex.: 14 dias, conforme a tua política).",
+            "Esclarece as condições do artigo para aceitar devolução (embalagem, estado, etc.).",
+            "Indica quem paga os portes de devolução, conforme a tua política.",
+            "Esclarece o método e prazo de reembolso após receção do artigo.",
+            "Direciona para a página oficial de políticas, se existir, para mais detalhe."
+          ]
+        }
+      ]
+    }
+  ];
+
+  /* ---------------------------------------------------------------------
+     ESTADO
+     --------------------------------------------------------------------- */
+  let state = {
+    mode: "offline",          // "offline" | "online"
+    selected: null,           // { catId, subId }
+    chatHistory: []           // [{role:'user'|'assistant', content:'...'}]
+  };
+
+  /* ---------------------------------------------------------------------
+     UTILITÁRIOS
+     --------------------------------------------------------------------- */
+  function normalize(str){
+    return (str || "")
+      .toString()
+      .toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, ""); // remove acentos
+  }
+
+  function escapeHtml(str){
+    return (str || "").toString()
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function findCategoryAndSub(catId, subId){
+    const cat = TREE.find(c => c.id === catId);
+    if(!cat) return null;
+    const sub = cat.subtopics.find(s => s.id === subId);
+    if(!sub) return null;
+    return {cat, sub};
+  }
+
+  /* ---------------------------------------------------------------------
+     PESQUISA LOCAL — usada pelo modo offline e como 1º passo do modo online
+     --------------------------------------------------------------------- */
+  function searchLocal(query){
+    const q = normalize(query).trim();
+    if(!q) return [];
+    const terms = q.split(/\s+/).filter(Boolean);
+    const results = [];
+
+    TREE.forEach(cat => {
+      cat.subtopics.forEach(sub => {
+        const haystack = normalize([
+          sub.title, sub.summary, (sub.keywords||[]).join(" "), sub.steps.join(" ")
+        ].join(" "));
+
+        let score = 0;
+        terms.forEach(t => {
+          if(haystack.indexOf(t) !== -1) score += 1;
+          if(normalize(sub.title).indexOf(t) !== -1) score += 2;
+          (sub.keywords||[]).forEach(k => { if(normalize(k).indexOf(t) !== -1) score += 2; });
+        });
+
+        if(score > 0){
+          results.push({cat, sub, score});
+        }
+      });
+    });
+
+    results.sort((a,b) => b.score - a.score);
+    return results;
+  }
+
+  /* ---------------------------------------------------------------------
+     RENDER — árvore lateral
+     --------------------------------------------------------------------- */
+  function renderTree(){
+    const container = document.getElementById("treeContainer");
+    container.innerHTML = "";
+    TREE.forEach(cat => {
+      const wrap = document.createElement("div");
+      wrap.className = "category";
+      wrap.dataset.catId = cat.id;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "category-btn";
+      btn.innerHTML = `<span class="emoji">${cat.emoji}</span><span>${escapeHtml(cat.name)}</span><span class="chev">▶</span>`;
+      btn.addEventListener("click", () => {
+        wrap.classList.toggle("open");
+      });
+
+      const ul = document.createElement("ul");
+      ul.className = "subtopic-list";
+      cat.subtopics.forEach(sub => {
+        const li = document.createElement("li");
+        const subBtn = document.createElement("button");
+        subBtn.type = "button";
+        subBtn.textContent = sub.title;
+        subBtn.dataset.catId = cat.id;
+        subBtn.dataset.subId = sub.id;
+        subBtn.addEventListener("click", () => selectSubtopic(cat.id, sub.id));
+        li.appendChild(subBtn);
+        ul.appendChild(li);
+      });
+
+      wrap.appendChild(btn);
+      wrap.appendChild(ul);
+      container.appendChild(wrap);
+    });
+  }
+
+  function markSelectedInTree(catId, subId){
+    document.querySelectorAll(".subtopic-list li button").forEach(b => {
+      b.classList.toggle("selected", b.dataset.catId === catId && b.dataset.subId === subId);
+    });
+    document.querySelectorAll(".category").forEach(c => {
+      if(c.dataset.catId === catId) c.classList.add("open");
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     RENDER — conteúdo principal
+     --------------------------------------------------------------------- */
+  function renderWelcome(){
+    const content = document.getElementById("content");
+    content.innerHTML = `
+      <div class="card welcome">
+        <h2>Bem-vindo(a) ao ResolveFlow</h2>
+        <p>Escolhe uma categoria na barra lateral ou pesquisa por palavra-chave para encontrar a resolução recomendada.</p>
+        <ul>
+          <li><strong>Modo Offline</strong> — pesquisa apenas nas notas locais desta árvore. Nenhum dado sai do teu browser.</li>
+          <li><strong>Modo Online (IA)</strong> — adiciona um assistente de IA para dúvidas que não estejam no protocolo, além da pesquisa local.</li>
+        </ul>
+      </div>
+      ${state.mode === "online" ? renderAiSectionHtml() : ""}
+    `;
+    if(state.mode === "online") wireAiSection();
+  }
+
+  function renderResolution(catId, subId){
+    const found = findCategoryAndSub(catId, subId);
+    const content = document.getElementById("content");
+    if(!found){ renderWelcome(); return; }
+    const {cat, sub} = found;
+
+    content.innerHTML = `
+      <div class="breadcrumb">${escapeHtml(cat.name)}<span class="sep">/</span><strong>${escapeHtml(sub.title)}</strong></div>
+      <div class="card">
+        <h2>${sub.emoji ? sub.emoji + " " : ""}${escapeHtml(sub.title)}</h2>
+        <p class="resolution-summary">${escapeHtml(sub.summary)}</p>
+        <ol class="steps">
+          ${sub.steps.map(s => `<li>${escapeHtml(s)}</li>`).join("")}
+        </ol>
+        <div class="tag-row">
+          ${(sub.keywords||[]).slice(0,6).map(k => `<span class="tag">${escapeHtml(k)}</span>`).join("")}
+        </div>
+      </div>
+      ${state.mode === "online" ? renderAiSectionHtml() : ""}
+    `;
+    if(state.mode === "online") wireAiSection();
+  }
+
+  function selectSubtopic(catId, subId){
+    state.selected = {catId, subId};
+    markSelectedInTree(catId, subId);
+    renderResolution(catId, subId);
+    document.getElementById("searchInput").value = "";
+  }
+
+  /* ---------------------------------------------------------------------
+     RENDER — resultados de pesquisa (usado pelos dois modos)
+     --------------------------------------------------------------------- */
+  function renderSearchResults(query){
+    const content = document.getElementById("content");
+    const results = searchLocal(query);
+
+    if(results.length > 0){
+      content.innerHTML = `
+        <div class="search-results">
+          <h3>Resultados para "${escapeHtml(query)}"</h3>
+          ${results.map(r => `
+            <button type="button" class="result-item" data-cat="${r.cat.id}" data-sub="${r.sub.id}">
+              <div class="path">${escapeHtml(r.cat.name)}</div>
+              <div class="title">${escapeHtml(r.sub.title)}</div>
+              <div class="snippet">${escapeHtml(r.sub.summary)}</div>
+            </button>
+          `).join("")}
+        </div>
+        ${state.mode === "online" ? renderAiSectionHtml() : ""}
+      `;
+      content.querySelectorAll(".result-item").forEach(btn => {
+        btn.addEventListener("click", () => selectSubtopic(btn.dataset.cat, btn.dataset.sub));
+      });
+      if(state.mode === "online") wireAiSection();
+      return;
+    }
+
+    // Sem resultados locais
+    if(state.mode === "offline"){
+      content.innerHTML = `
+        <div class="no-results-box">
+          <h3>Sem resultados no protocolo local</h3>
+          <p>Não encontrámos nenhuma resolução local para "${escapeHtml(query)}".<br>
+          Podes abrir um chat de IA genérico noutro separador para pesquisar — nada é enviado automaticamente.</p>
+          <a class="btn" href="${GENERIC_AI_CHAT_URL}" target="_blank" rel="noopener noreferrer">↗ Abrir chat de IA genérico</a>
+          <p style="margin-top:14px; font-size:12px;">Dica: no modo <strong>Online (IA)</strong> tens um assistente integrado, com acesso a esta árvore de resoluções.</p>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="no-results-box">
+          <h3>Sem resultados no protocolo local</h3>
+          <p>Não encontrámos nenhuma resolução local para "${escapeHtml(query)}". Usa o assistente de IA abaixo para tirar a dúvida.</p>
+        </div>
+        ${renderAiSectionHtml()}
+      `;
+      wireAiSection();
+      // Pré-preenche a caixa de chat com a pergunta da pesquisa
+      setTimeout(() => {
+        const ta = document.getElementById("chatInput");
+        if(ta){ ta.value = query; ta.focus(); }
+      }, 0);
+    }
+  }
+
+  /* =========================================================================
+     MODO — toggle Offline / Online, persistido em localStorage
+     ========================================================================= */
+  function setMode(mode){
+    state.mode = mode;
+    localStorage.setItem(LS_KEYS.mode, mode);
+
+    document.getElementById("btnModeOffline").classList.toggle("active", mode === "offline");
+    document.getElementById("btnModeOffline").setAttribute("aria-selected", mode === "offline");
+    document.getElementById("btnModeOnline").classList.toggle("active", mode === "online");
+    document.getElementById("btnModeOnline").setAttribute("aria-selected", mode === "online");
+
+    updatePrivacyBanner();
+
+    // Re-renderiza o painel atual para mostrar/esconder a secção de IA
+    const q = document.getElementById("searchInput").value.trim();
+    if(q){
+      renderSearchResults(q);
+    } else if(state.selected){
+      renderResolution(state.selected.catId, state.selected.subId);
+    } else {
+      renderWelcome();
+    }
+  }
+
+  function updatePrivacyBanner(){
+    const banner = document.getElementById("privacyBanner");
+    const text = document.getElementById("privacyBannerText");
+    banner.classList.toggle("online", state.mode === "online");
+    if(state.mode === "online"){
+      text.innerHTML = `<strong>Modo Online (IA) ativo:</strong> as perguntas que escreveres no chat são enviadas para um servidor externo de IA (Anthropic/Claude). ` +
+        `Nunca coles dados pessoais de clientes, credenciais, ou texto de manuais internos confidenciais. ` +
+        `Esta é uma ferramenta pessoal e genérica — não substitui as políticas de confidencialidade do teu empregador.`;
+    } else {
+      text.innerHTML = `<strong>Modo Offline:</strong> nada sai do teu browser. Nunca coles dados pessoais de clientes, credenciais, ` +
+        `ou texto de manuais internos confidenciais, mesmo neste modo local. Esta ferramenta é pessoal e genérica — não substitui as ` +
+        `políticas de confidencialidade do teu empregador.`;
+    }
+  }
+
+  /* =========================================================================
+     MODO ONLINE (IA) — gestão da chave, chat e chamada à API Anthropic
+     ========================================================================= */
+  function getApiKey(){
+    return localStorage.getItem(LS_KEYS.apiKey) || "";
+  }
+  function setApiKey(key){
+    localStorage.setItem(LS_KEYS.apiKey, key.trim());
+  }
+  function clearApiKey(){
+    localStorage.removeItem(LS_KEYS.apiKey);
+  }
+  function maskKey(key){
+    if(key.length <= 8) return "•".repeat(key.length);
+    return key.slice(0,4) + "…" + key.slice(-4);
+  }
+
+  function renderAiSectionHtml(){
+    const key = getApiKey();
+    const keyCardHtml = key
+      ? `
+        <div class="ai-key-card" id="apiKeyCard">
+          <h3>Assistente de IA</h3>
+          <div class="key-status">
+            <span class="dot"></span>
+            <span>Chave guardada localmente:</span>
+            <span class="masked">${escapeHtml(maskKey(key))}</span>
+            <button type="button" class="btn danger" id="btnClearKey">Remover chave</button>
+          </div>
+        </div>
+      `
+      : `
+        <div class="ai-key-card" id="apiKeyCard">
+          <h3>Configurar chave de API (Anthropic / Claude)</h3>
+          <p>
+            Para usares o assistente de IA precisas da tua própria chave de API da Anthropic.
+            A chave fica guardada <strong>só neste browser</strong> (localStorage) — nunca é enviada para
+            este repositório nem para nenhum outro sítio além da própria API da Anthropic quando fazes uma pergunta.
+            Obtém uma chave em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>.
+          </p>
+          <div class="row">
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-••••••••••••••••••••••••" autocomplete="off">
+            <button type="button" class="btn" id="btnSaveKey">Guardar chave</button>
+          </div>
+        </div>
+      `;
+
+    return `
+      <div class="ai-section">
+        ${keyCardHtml}
+        ${key ? `
+        <div class="chat-panel" id="chatPanel">
+          <div class="chat-log" id="chatLog"></div>
+          <div class="chat-typing" id="chatTyping">A pensar…</div>
+          <div class="chat-input-row">
+            <textarea id="chatInput" placeholder="Escreve a tua pergunta…" rows="1"></textarea>
+            <button type="button" class="btn" id="btnSendChat">Enviar</button>
+          </div>
+        </div>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  function wireAiSection(){
+    const saveBtn = document.getElementById("btnSaveKey");
+    if(saveBtn){
+      saveBtn.addEventListener("click", () => {
+        const input = document.getElementById("apiKeyInput");
+        const val = input.value.trim();
+        if(!val){ input.focus(); return; }
+        setApiKey(val);
+        rerenderCurrentPanelKeepingChat();
+      });
+    }
+    const clearBtn = document.getElementById("btnClearKey");
+    if(clearBtn){
+      clearBtn.addEventListener("click", () => {
+        if(confirm("Remover a chave de API guardada neste browser?")){
+          clearApiKey();
+          state.chatHistory = [];
+          rerenderCurrentPanelKeepingChat();
+        }
+      });
+    }
+
+    const sendBtn = document.getElementById("btnSendChat");
+    const chatInput = document.getElementById("chatInput");
+    if(sendBtn && chatInput){
+      renderChatHistory();
+      sendBtn.addEventListener("click", handleSendChat);
+      chatInput.addEventListener("keydown", (e) => {
+        if(e.key === "Enter" && !e.shiftKey){
+          e.preventDefault();
+          handleSendChat();
+        }
+      });
+      chatInput.addEventListener("input", () => {
+        chatInput.style.height = "auto";
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + "px";
+      });
+    }
+  }
+
+  function rerenderCurrentPanelKeepingChat(){
+    const q = document.getElementById("searchInput").value.trim();
+    if(q){ renderSearchResults(q); }
+    else if(state.selected){ renderResolution(state.selected.catId, state.selected.subId); }
+    else { renderWelcome(); }
+  }
+
+  function renderChatHistory(){
+    const log = document.getElementById("chatLog");
+    if(!log) return;
+    log.innerHTML = "";
+    state.chatHistory.forEach(msg => appendChatBubble(msg.role, msg.content, false));
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function appendChatBubble(role, htmlOrText, isHtml){
+    const log = document.getElementById("chatLog");
+    if(!log) return;
+    const wrap = document.createElement("div");
+    wrap.className = "chat-msg " + role;
+    const label = {
+      user: "Tu", assistant: "Assistente IA", system: "Sugestão local", error: "Erro"
+    }[role] || role;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    if(isHtml){ bubble.innerHTML = htmlOrText; } else { bubble.textContent = htmlOrText; }
+    wrap.innerHTML = `<div class="role-label">${label}</div>`;
+    wrap.appendChild(bubble);
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function handleSendChat(forceAi){
+    const chatInput = document.getElementById("chatInput");
+    if(!chatInput) return;
+    const text = chatInput.value.trim();
+    if(!text) return;
+
+    chatInput.value = "";
+    chatInput.style.height = "auto";
+
+    state.chatHistory.push({role:"user", content:text});
+    appendChatBubble("user", text, false);
+
+    if(!forceAi){
+      const localMatches = searchLocal(text);
+      if(localMatches.length > 0){
+        const best = localMatches[0];
+        const html = `
+          <div class="suggestion-card">
+            <div class="title">💡 Encontrei isto no protocolo local:</div>
+            <div>${escapeHtml(best.cat.name)} — <strong>${escapeHtml(best.sub.title)}</strong><br>
+            <span style="color:var(--color-text-muted);">${escapeHtml(best.sub.summary)}</span></div>
+            <div class="actions">
+              <button type="button" class="btn secondary" data-action="view" data-cat="${best.cat.id}" data-sub="${best.sub.id}">Ver resolução</button>
+              <button type="button" class="btn" data-action="ask-ai">Perguntar à IA mesmo assim</button>
+            </div>
+          </div>
+        `;
+        appendChatBubble("system", html, true);
+        const log = document.getElementById("chatLog");
+        const lastCard = log.lastElementChild.querySelector(".suggestion-card");
+        lastCard.querySelector('[data-action="view"]').addEventListener("click", (e) => {
+          selectSubtopic(e.target.dataset.cat, e.target.dataset.sub);
+        });
+        lastCard.querySelector('[data-action="ask-ai"]').addEventListener("click", () => {
+          callAi(text);
+        });
+        return;
+      }
+    }
+
+    callAi(text);
+  }
+
+  function setTyping(on){
+    const t = document.getElementById("chatTyping");
+    if(t) t.classList.toggle("active", on);
+  }
+
+  function callAi(userText){
+    const key = getApiKey();
+    if(!key){
+      appendChatBubble("error", "Não há nenhuma chave de API guardada. Adiciona a tua chave da Anthropic acima para usares o assistente.", false);
+      return;
+    }
+
+    setTyping(true);
+    const sendBtn = document.getElementById("btnSendChat");
+    if(sendBtn) sendBtn.disabled = true;
+
+    const messages = state.chatHistory
+      .filter(m => m.role === "user" || m.role === "assistant")
+      .map(m => ({role: m.role, content: m.content}));
+
+    fetch(AI_CONFIG.apiEndpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": AI_CONFIG.apiVersion,
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: AI_CONFIG.model,
+        max_tokens: AI_CONFIG.maxTokens,
+        system: AI_CONFIG.systemPrompt,
+        messages: messages
+      })
+    })
+    .then(async (res) => {
+      const bodyText = await res.text();
+      let body = {};
+      try{ body = JSON.parse(bodyText); } catch(e){ /* resposta não-JSON */ }
+
+      if(!res.ok){
+        throw {status: res.status, body};
+      }
+      return body;
+    })
+    .then(body => {
+      const reply = (body.content && body.content[0] && body.content[0].text) || "(sem resposta)";
+      state.chatHistory.push({role:"assistant", content:reply});
+      appendChatBubble("assistant", reply, false);
+    })
+    .catch(err => {
+      appendChatBubble("error", formatApiError(err), false);
+    })
+    .finally(() => {
+      setTyping(false);
+      if(sendBtn) sendBtn.disabled = false;
+    });
+  }
+
+  function formatApiError(err){
+    if(!err || typeof err !== "object" || !("status" in err)){
+      return "Não foi possível contactar a IA. Verifica a tua ligação à internet e tenta novamente.";
+    }
+    const status = err.status;
+    const apiMsg = err.body && err.body.error && err.body.error.message;
+
+    if(status === 401){
+      return "Chave de API inválida ou sem permissões. Verifica se colaste a chave corretamente (remove-a e adiciona de novo, se necessário).";
+    }
+    if(status === 429){
+      return "Limite de pedidos atingido (rate limit) na tua conta Anthropic. Aguarda um pouco e tenta novamente.";
+    }
+    if(status === 400){
+      return "O pedido enviado à IA foi rejeitado" + (apiMsg ? (": " + apiMsg) : ".") ;
+    }
+    if(status >= 500){
+      return "O serviço de IA da Anthropic está indisponível de momento. Tenta novamente dentro de instantes.";
+    }
+    return "Ocorreu um erro ao contactar a IA (código " + status + ")" + (apiMsg ? (": " + apiMsg) : ".");
+  }
+
+  /* =========================================================================
+     PESQUISA — ligação da caixa do cabeçalho
+     ========================================================================= */
+  function wireSearch(){
+    const input = document.getElementById("searchInput");
+    let debounceTimer = null;
+    input.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const q = input.value.trim();
+        if(q){
+          state.selected = null;
+          renderSearchResults(q);
+        } else if(!state.selected){
+          renderWelcome();
+        }
+      }, 180);
+    });
+    input.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        const q = input.value.trim();
+        if(q) renderSearchResults(q);
+      }
+    });
+  }
+
+  /* =========================================================================
+     INIT
+     ========================================================================= */
+  function init(){
+    const savedMode = localStorage.getItem(LS_KEYS.mode);
+    state.mode = (savedMode === "online") ? "online" : "offline";
+
+    renderTree();
+    wireSearch();
+
+    document.getElementById("btnModeOffline").addEventListener("click", () => setMode("offline"));
+    document.getElementById("btnModeOnline").addEventListener("click", () => setMode("online"));
+
+    document.getElementById("btnModeOffline").classList.toggle("active", state.mode === "offline");
+    document.getElementById("btnModeOnline").classList.toggle("active", state.mode === "online");
+    document.getElementById("btnModeOffline").setAttribute("aria-selected", state.mode === "offline");
+    document.getElementById("btnModeOnline").setAttribute("aria-selected", state.mode === "online");
+
+    updatePrivacyBanner();
+    renderWelcome();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>

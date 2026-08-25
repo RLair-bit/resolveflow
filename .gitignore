@@ -1,0 +1,32 @@
+# ResolveFlow — .gitignore
+# Objetivo principal: nunca deixar chaves de API, segredos ou ficheiros de
+# ambiente locais entrarem acidentalmente no repositório.
+# A chave de API do modo Online (IA) NUNCA deve estar num ficheiro do projeto
+# — fica apenas em localStorage do browser do utilizador.
+
+# Chaves / segredos
+*.key
+*.pem
+*.env
+.env
+.env.*
+*.secret
+secrets.json
+apikey.txt
+api_key.txt
+
+# Ficheiros de configuração local que possam conter segredos
+*.local.json
+config.local.js
+
+# SO / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+
+# Logs e temporários
+*.log
+*.tmp
