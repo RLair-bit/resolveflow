@@ -12,6 +12,8 @@
 <div class="app">
 
   <header class="app-header">
+    <button type="button" class="icon-btn hamburger-btn" id="btnMobileNav" title="Abrir menu" aria-label="Abrir menu de categorias">☰</button>
+
     <div class="brand">
       <div class="logo">RF</div>
       <div>
@@ -23,9 +25,11 @@
     <div class="header-search">
       <span class="icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Pesquisar por palavra-chave (ex.: password, reembolso, atraso)…" autocomplete="off">
+      <div class="search-suggestions" id="searchSuggestions"></div>
     </div>
 
     <button type="button" class="icon-btn" id="btnThemeToggle" title="Mudar tema" aria-label="Mudar tema claro/escuro">🌙</button>
+    <button type="button" class="icon-btn" id="btnPaletteOpen" title="Paleta de comandos (Ctrl+K)" aria-label="Abrir paleta de comandos">⌘</button>
 
     <div class="mode-toggle" role="tablist" aria-label="Modo de funcionamento">
       <button type="button" id="btnModeOffline" role="tab" aria-selected="true">
@@ -42,10 +46,15 @@
     <span id="privacyBannerText"></span>
   </div>
 
+  <div class="nav-backdrop" id="navBackdrop"></div>
+
   <div class="layout">
     <nav class="tree" id="treeNav" aria-label="Árvore de categorias">
       <div id="sideLists"></div>
-      <h2>Categorias</h2>
+      <div class="tree-heading-row">
+        <h2>Categorias</h2>
+        <button type="button" class="icon-text-btn small" id="btnNewResolution">+ Nova</button>
+      </div>
       <div id="treeContainer"></div>
     </nav>
 
@@ -54,10 +63,40 @@
     </main>
   </div>
 
+  <!-- Paleta de comandos (Ctrl+K) -->
+  <div class="modal-overlay" id="paletteOverlay">
+    <div class="modal-box palette-box">
+      <input type="text" id="paletteInput" class="palette-input" placeholder="Pesquisar resoluções ou ações…" autocomplete="off">
+      <div id="paletteResults" class="palette-results"></div>
+      <div class="palette-hint">↑↓ navegar · Enter selecionar · Esc fechar</div>
+    </div>
+  </div>
+
+  <!-- Editor de resoluções personalizadas -->
+  <div class="modal-overlay" id="editorOverlay">
+    <div class="modal-box editor-box">
+      <h3 id="editorTitle">Nova resolução</h3>
+      <label>Título<input type="text" id="editTitle" placeholder="Ex.: Impressora não liga"></label>
+      <label>Resumo<input type="text" id="editSummary" placeholder="Uma frase a descrever o problema"></label>
+      <label>Passos (um por linha)<textarea id="editSteps" rows="5" placeholder="Verifica o cabo de alimentação&#10;Confirma que a tomada tem corrente&#10;..."></textarea></label>
+      <label>Palavras-chave (separadas por vírgula)<input type="text" id="editKeywords" placeholder="impressora, não liga, sem energia"></label>
+      <div class="editor-actions">
+        <button type="button" class="btn secondary" id="btnEditorCancel">Cancelar</button>
+        <button type="button" class="btn danger hidden" id="btnEditorDelete">Eliminar</button>
+        <button type="button" class="btn" id="btnEditorSave">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="app-footer">
     ResolveFlow — ferramenta pessoal e open-source de apoio ao cliente. Não substitui as políticas de confidencialidade do teu empregador.
     <br>Consulta o <a href="README.md">README</a> para mais informação sobre os modos e privacidade.
     <br><button type="button" class="danger-link" id="btnClearAllData">Apagar todos os dados locais desta app (chave, favoritos, histórico, feedback)</button>
+    <br>
+    <button type="button" class="footer-link" id="btnExportData">Exportar as minhas resoluções (.json)</button>
+    ·
+    <button type="button" class="footer-link" id="btnImportData">Importar resoluções (.json)</button>
+    <input type="file" id="importFileInput" accept="application/json" class="hidden">
   </footer>
 
 </div>
