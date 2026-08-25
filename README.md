@@ -12,6 +12,16 @@ por omissão. `<link>`/`<script src>` locais funcionam normalmente em
 `file://`, ao contrário de módulos ES ou `fetch()`, por isso dividir em 3
 ficheiros não quebra o "duplo clique e funciona".
 
+## Design
+
+O padrão visual das listas (cartões arredondados, ícones coloridos por
+categoria, separadores finos, chevron `›`) foi inspirado no
+[iOS 16 UI Kit for Figma (Community)](https://www.figma.com/design/yBbzbw3RuLtLvoGHZQYsgc/iOS-16-UI-Kit-for-Figma--Community-)
+— ecrãs "Settings" (listas agrupadas) e "MessageThread" (bolhas de chat) —
+adaptado à identidade própria do ResolveFlow (acento cobalto `#2D5BE3`,
+Space Grotesk / IBM Plex Sans / IBM Plex Mono), não uma cópia literal do
+iOS.
+
 ## Funcionalidades
 
 - Árvore de decisão navegável + pesquisa local com destaque dos termos encontrados.
