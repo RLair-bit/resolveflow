@@ -36,8 +36,13 @@
     recent: "resolveflow_recent",          // array de {catId,subId}, vistos recentemente
     favorites: "resolveflow_favorites",    // array de {catId,subId}, marcados como favoritos
     feedback: "resolveflow_feedback",      // objeto { "cat/sub": {up,down,voted} }
-    chatSession: "resolveflow_chat_session" // histórico de chat — sessionStorage (limpa ao fechar o separador)
+    chatSession: "resolveflow_chat_session", // histórico de chat — sessionStorage (limpa ao fechar o separador)
+    customResolutions: "resolveflow_custom" // array de resoluções criadas pelo utilizador
   };
+
+  // Categoria virtual "Minhas Resoluções", construída a partir do que o
+  // utilizador guardar em localStorage — nunca mistura com a árvore embutida.
+  const CUSTOM_CAT_ID = "custom";
 
   /* ---------------------------------------------------------------------
      DADOS — árvore de decisão (categorias → sub-tópicos → resolução)
@@ -277,11 +282,42 @@
   }
 
   function findCategoryAndSub(catId, subId){
-    const cat = TREE.find(c => c.id === catId);
+    const cat = catId === CUSTOM_CAT_ID ? getCustomCategory() : TREE.find(c => c.id === catId);
     if(!cat) return null;
     const sub = cat.subtopics.find(s => s.id === subId);
     if(!sub) return null;
     return {cat, sub};
+  }
+
+  /* ---------------------------------------------------------------------
+     RESOLUÇÕES PERSONALIZADAS — criadas pelo utilizador, guardadas em
+     localStorage; nunca tocam nos dados embutidos (TREE) do projeto
+     --------------------------------------------------------------------- */
+  function getCustomResolutions(){
+    try{ return JSON.parse(localStorage.getItem(LS_KEYS.customResolutions) || "[]"); } catch(e){ return []; }
+  }
+  function setCustomResolutions(list){
+    localStorage.setItem(LS_KEYS.customResolutions, JSON.stringify(list));
+  }
+  function getCustomCategory(){
+    return {
+      id: CUSTOM_CAT_ID,
+      name: "Minhas Resoluções",
+      emoji: "📝",
+      color: "#8E8E93",
+      subtopics: getCustomResolutions()
+    };
+  }
+  function getTreeWithCustom(){
+    const custom = getCustomCategory();
+    return custom.subtopics.length > 0 ? TREE.concat([custom]) : TREE.slice();
+  }
+  function getAllSubtopics(){
+    const list = [];
+    TREE.forEach(cat => cat.subtopics.forEach(sub => list.push({cat, sub})));
+    const custom = getCustomCategory();
+    custom.subtopics.forEach(sub => list.push({cat: custom, sub}));
+    return list;
   }
 
   /* ---------------------------------------------------------------------
@@ -490,6 +526,284 @@
   }
 
   /* ---------------------------------------------------------------------
+     EDITOR DE RESOLUÇÕES PERSONALIZADAS — criar/editar/eliminar, sem
+     tocar na árvore embutida (TREE) do projeto
+     --------------------------------------------------------------------- */
+  let editingResolutionId = null; // null = a criar; caso contrário, id da resolução a editar
+
+  function openEditor(existingSub){
+    const overlay = document.getElementById("editorOverlay");
+    const titleEl = document.getElementById("editorTitle");
+    const deleteBtn = document.getElementById("btnEditorDelete");
+
+    if(existingSub){
+      editingResolutionId = existingSub.id;
+      titleEl.textContent = "Editar resolução";
+      document.getElementById("editTitle").value = existingSub.title;
+      document.getElementById("editSummary").value = existingSub.summary || "";
+      document.getElementById("editSteps").value = existingSub.steps.join("\n");
+      document.getElementById("editKeywords").value = (existingSub.keywords || []).join(", ");
+      deleteBtn.classList.remove("hidden");
+    } else {
+      editingResolutionId = null;
+      titleEl.textContent = "Nova resolução";
+      document.getElementById("editTitle").value = "";
+      document.getElementById("editSummary").value = "";
+      document.getElementById("editSteps").value = "";
+      document.getElementById("editKeywords").value = "";
+      deleteBtn.classList.add("hidden");
+    }
+    closePalette();
+    overlay.classList.add("open");
+    setTimeout(() => document.getElementById("editTitle").focus(), 30);
+  }
+
+  function closeEditor(){
+    document.getElementById("editorOverlay").classList.remove("open");
+    editingResolutionId = null;
+  }
+
+  function saveEditor(){
+    const title = document.getElementById("editTitle").value.trim();
+    const summary = document.getElementById("editSummary").value.trim();
+    const steps = document.getElementById("editSteps").value
+      .split("\n").map(s => s.trim()).filter(Boolean);
+    const keywords = document.getElementById("editKeywords").value
+      .split(",").map(s => s.trim()).filter(Boolean);
+
+    if(!title || steps.length === 0){
+      showToast("Preenche pelo menos o título e um passo.");
+      return;
+    }
+
+    let list = getCustomResolutions();
+    let savedId = editingResolutionId;
+    if(editingResolutionId){
+      list = list.map(r => r.id === editingResolutionId ? {...r, title, summary, steps, keywords} : r);
+    } else {
+      savedId = "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      list.push({id: savedId, title, summary, steps, keywords});
+    }
+    setCustomResolutions(list);
+    const wasEditing = !!editingResolutionId;
+    closeEditor();
+    renderTree();
+    renderSideLists();
+    showToast(wasEditing ? "Resolução atualizada." : "Resolução criada.");
+    selectSubtopic(CUSTOM_CAT_ID, savedId);
+  }
+
+  function deleteEditorResolution(){
+    if(!editingResolutionId) return;
+    if(!confirm("Eliminar esta resolução personalizada? Esta ação não pode ser desfeita.")) return;
+    const list = getCustomResolutions().filter(r => r.id !== editingResolutionId);
+    setCustomResolutions(list);
+    closeEditor();
+    renderTree();
+    renderSideLists();
+    renderWelcome();
+    showToast("Resolução eliminada.");
+  }
+
+  function wireEditor(){
+    document.getElementById("btnNewResolution").addEventListener("click", () => openEditor(null));
+    document.getElementById("btnEditorCancel").addEventListener("click", closeEditor);
+    document.getElementById("btnEditorSave").addEventListener("click", saveEditor);
+    document.getElementById("btnEditorDelete").addEventListener("click", deleteEditorResolution);
+    document.getElementById("editorOverlay").addEventListener("click", (e) => {
+      if(e.target.id === "editorOverlay") closeEditor();
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     EXPORTAR / IMPORTAR — backup das resoluções personalizadas em JSON
+     --------------------------------------------------------------------- */
+  function exportData(){
+    const data = {
+      resolveflowExport: true,
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      customResolutions: getCustomResolutions()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "resolveflow-resolucoes-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Ficheiro exportado.");
+  }
+
+  function importData(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      let data;
+      try{ data = JSON.parse(reader.result); }
+      catch(e){ showToast("Ficheiro inválido — não é um JSON válido."); return; }
+
+      const incoming = Array.isArray(data.customResolutions) ? data.customResolutions : [];
+      if(incoming.length === 0){
+        showToast("Ficheiro sem resoluções válidas para importar.");
+        return;
+      }
+      const current = getCustomResolutions();
+      const existingIds = new Set(current.map(r => r.id));
+      let added = 0;
+      incoming.forEach(r => {
+        if(r && r.id && r.title && Array.isArray(r.steps) && !existingIds.has(r.id)){
+          current.push(r);
+          existingIds.add(r.id);
+          added++;
+        }
+      });
+      setCustomResolutions(current);
+      renderTree();
+      renderSideLists();
+      showToast(added > 0 ? (added + " resolução(ões) importada(s).") : "Nada de novo para importar (já existiam).");
+    };
+    reader.readAsText(file);
+  }
+
+  function wireExportImport(){
+    document.getElementById("btnExportData").addEventListener("click", exportData);
+    const importBtn = document.getElementById("btnImportData");
+    const fileInput = document.getElementById("importFileInput");
+    importBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if(file) importData(file);
+      e.target.value = "";
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     MENU MOBILE (hamburger + gaveta lateral)
+     --------------------------------------------------------------------- */
+  function openMobileNav(){
+    document.getElementById("treeNav").classList.add("open");
+    document.getElementById("navBackdrop").classList.add("open");
+  }
+  function closeMobileNav(){
+    document.getElementById("treeNav").classList.remove("open");
+    document.getElementById("navBackdrop").classList.remove("open");
+  }
+  function wireMobileNav(){
+    document.getElementById("btnMobileNav").addEventListener("click", openMobileNav);
+    document.getElementById("navBackdrop").addEventListener("click", closeMobileNav);
+  }
+
+  /* ---------------------------------------------------------------------
+     PALETA DE COMANDOS (Ctrl+K) — salta para qualquer resolução ou
+     executa uma ação rápida (mudar modo, tema, criar resolução)
+     --------------------------------------------------------------------- */
+  let paletteActiveIndex = -1;
+
+  function updateActiveSuggestion(items, idx){
+    items.forEach((it, i) => it.classList.toggle("active", i === idx));
+  }
+
+  function openPalette(){
+    const overlay = document.getElementById("paletteOverlay");
+    const input = document.getElementById("paletteInput");
+    overlay.classList.add("open");
+    input.value = "";
+    renderPaletteResults("");
+    setTimeout(() => input.focus(), 30);
+  }
+  function closePalette(){
+    document.getElementById("paletteOverlay").classList.remove("open");
+  }
+
+  function getPaletteActions(query){
+    const q = normalize(query);
+    const actions = [
+      {
+        label: state.mode === "offline" ? "✨ Mudar para modo Online (IA)" : "🔒 Mudar para modo Offline",
+        run: () => setMode(state.mode === "offline" ? "online" : "offline")
+      },
+      {label: "🌙 Alternar tema claro/escuro", run: () => toggleTheme()},
+      {label: "📝 Criar nova resolução", run: () => openEditor(null)}
+    ];
+    if(!q) return actions;
+    return actions.filter(a => normalize(a.label).indexOf(q) !== -1);
+  }
+
+  function renderPaletteResults(query){
+    const box = document.getElementById("paletteResults");
+    paletteActiveIndex = -1;
+    const trimmed = query.trim();
+    const results = trimmed ? searchLocal(trimmed).slice(0, 8) : [];
+    const actions = getPaletteActions(query);
+
+    let html = "";
+    if(actions.length){
+      html += `<div class="palette-section">Ações</div>`;
+      html += actions.map((a, i) => `<button type="button" class="sugg-item" data-action-idx="${i}">${a.label}</button>`).join("");
+    }
+    if(results.length){
+      html += `<div class="palette-section">Resoluções</div>`;
+      html += results.map(r => `
+        <button type="button" class="sugg-item" data-cat="${r.cat.id}" data-sub="${r.sub.id}">
+          <span>${escapeHtml(r.sub.title)}</span><span class="path">${escapeHtml(r.cat.name)}</span>
+        </button>
+      `).join("");
+    }
+    if(!actions.length && !results.length){
+      html = `<div class="palette-empty">Sem resultados para "${escapeHtml(trimmed)}"</div>`;
+    }
+    box.innerHTML = html;
+
+    box.querySelectorAll(".sugg-item[data-action-idx]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const action = actions[Number(btn.dataset.actionIdx)];
+        closePalette();
+        if(action) action.run();
+      });
+    });
+    box.querySelectorAll(".sugg-item[data-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        closePalette();
+        selectSubtopic(btn.dataset.cat, btn.dataset.sub);
+      });
+    });
+  }
+
+  function wireCommandPalette(){
+    const overlay = document.getElementById("paletteOverlay");
+    const input = document.getElementById("paletteInput");
+    const openBtn = document.getElementById("btnPaletteOpen");
+
+    openBtn.addEventListener("click", openPalette);
+    overlay.addEventListener("click", (e) => { if(e.target === overlay) closePalette(); });
+
+    input.addEventListener("input", () => renderPaletteResults(input.value));
+    input.addEventListener("keydown", (e) => {
+      const items = Array.from(document.getElementById("paletteResults").querySelectorAll(".sugg-item"));
+      if(e.key === "ArrowDown" && items.length){
+        e.preventDefault();
+        paletteActiveIndex = Math.min(paletteActiveIndex + 1, items.length - 1);
+        updateActiveSuggestion(items, paletteActiveIndex);
+        items[paletteActiveIndex].scrollIntoView({block: "nearest"});
+      } else if(e.key === "ArrowUp" && items.length){
+        e.preventDefault();
+        paletteActiveIndex = Math.max(paletteActiveIndex - 1, 0);
+        updateActiveSuggestion(items, paletteActiveIndex);
+        items[paletteActiveIndex].scrollIntoView({block: "nearest"});
+      } else if(e.key === "Enter"){
+        e.preventDefault();
+        if(paletteActiveIndex >= 0 && items[paletteActiveIndex]){
+          items[paletteActiveIndex].click();
+        } else if(items.length === 1){
+          items[0].click();
+        }
+      }
+    });
+  }
+
+  /* ---------------------------------------------------------------------
      LIGAÇÕES DIRETAS (URL#categoria/subtopico) — partilháveis, com
      suporte a avançar/recuar do browser
      --------------------------------------------------------------------- */
@@ -523,7 +837,12 @@
       const tag = (document.activeElement && document.activeElement.tagName) || "";
       const typing = tag === "INPUT" || tag === "TEXTAREA";
 
-      if((e.key === "/" && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")){
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){
+        e.preventDefault();
+        openPalette();
+        return;
+      }
+      if(e.key === "/" && !typing){
         e.preventDefault();
         const input = document.getElementById("searchInput");
         input.focus();
@@ -531,20 +850,56 @@
         return;
       }
       if(e.key === "Escape"){
+        const paletteOverlay = document.getElementById("paletteOverlay");
+        const editorOverlay = document.getElementById("editorOverlay");
+        if(paletteOverlay.classList.contains("open")){ closePalette(); return; }
+        if(editorOverlay.classList.contains("open")){ closeEditor(); return; }
+
         const input = document.getElementById("searchInput");
         if(document.activeElement === input && input.value){
           input.value = "";
+          document.getElementById("searchSuggestions").classList.remove("open");
           if(state.selected){ renderResolution(state.selected.catId, state.selected.subId); }
           else { renderWelcome(); }
         } else if(document.activeElement === input){
           input.blur();
+        } else {
+          closeMobileNav();
         }
       }
     });
   }
 
   /* ---------------------------------------------------------------------
-     PESQUISA LOCAL — usada pelo modo offline e como 1º passo do modo online
+     DISTÂNCIA DE LEVENSHTEIN — usada para tolerar pequenos erros de
+     escrita na pesquisa (ex.: "reembolo" continua a encontrar "reembolso")
+     --------------------------------------------------------------------- */
+  function levenshtein(a, b){
+    const m = a.length, n = b.length;
+    if(m === 0) return n;
+    if(n === 0) return m;
+    const dp = new Array(n + 1);
+    for(let j = 0; j <= n; j++) dp[j] = j;
+    for(let i = 1; i <= m; i++){
+      let prev = dp[0];
+      dp[0] = i;
+      for(let j = 1; j <= n; j++){
+        const tmp = dp[j];
+        dp[j] = Math.min(
+          dp[j] + 1,
+          dp[j - 1] + 1,
+          prev + (a[i - 1] === b[j - 1] ? 0 : 1)
+        );
+        prev = tmp;
+      }
+    }
+    return dp[n];
+  }
+
+  /* ---------------------------------------------------------------------
+     PESQUISA LOCAL — usada pelo modo offline e como 1º passo do modo
+     online. Inclui as resoluções embutidas + as personalizadas, e tolera
+     pequenos erros de escrita (pesquisa difusa).
      --------------------------------------------------------------------- */
   function searchLocal(query){
     const q = normalize(query).trim();
@@ -552,26 +907,34 @@
     const terms = q.split(/\s+/).filter(Boolean);
     const results = [];
 
-    TREE.forEach(cat => {
-      cat.subtopics.forEach(sub => {
-        const haystack = normalize([
-          sub.title, sub.summary, (sub.keywords||[]).join(" "), sub.steps.join(" ")
-        ].join(" "));
+    getAllSubtopics().forEach(({cat, sub}) => {
+      const haystackWords = normalize([
+        sub.title, sub.summary, (sub.keywords || []).join(" "), sub.steps.join(" ")
+      ].join(" ")).split(/\s+/).filter(Boolean);
+      const haystack = haystackWords.join(" ");
 
-        let score = 0;
-        terms.forEach(t => {
-          if(haystack.indexOf(t) !== -1) score += 1;
-          if(normalize(sub.title).indexOf(t) !== -1) score += 2;
-          (sub.keywords||[]).forEach(k => { if(normalize(k).indexOf(t) !== -1) score += 2; });
-        });
-
-        if(score > 0){
-          results.push({cat, sub, score});
+      let score = 0;
+      terms.forEach(t => {
+        if(haystack.indexOf(t) !== -1){
+          score += 1;
+        } else if(t.length >= 4){
+          // Sem correspondência exata: procura uma palavra "próxima" (typo-tolerante)
+          const maxDist = t.length >= 7 ? 2 : 1;
+          const closeMatch = haystackWords.some(w =>
+            Math.abs(w.length - t.length) <= maxDist && levenshtein(w, t) <= maxDist
+          );
+          if(closeMatch) score += 0.5;
         }
+        if(normalize(sub.title).indexOf(t) !== -1) score += 2;
+        (sub.keywords || []).forEach(k => { if(normalize(k).indexOf(t) !== -1) score += 2; });
       });
+
+      if(score > 0){
+        results.push({cat, sub, score});
+      }
     });
 
-    results.sort((a,b) => b.score - a.score);
+    results.sort((a, b) => b.score - a.score);
     return results;
   }
 
@@ -581,7 +944,7 @@
   function renderTree(){
     const container = document.getElementById("treeContainer");
     container.innerHTML = "";
-    TREE.forEach(cat => {
+    getTreeWithCustom().forEach(cat => {
       const wrap = document.createElement("div");
       wrap.className = "category";
       wrap.dataset.catId = cat.id;
@@ -666,6 +1029,7 @@
           <button type="button" class="icon-text-btn" id="btnCopyLink">🔗 Copiar link</button>
           <button type="button" class="icon-text-btn" id="btnPrint">🖨️ Imprimir</button>
           <button type="button" class="icon-text-btn ${fav ? "active" : ""}" id="btnFavorite">${fav ? "⭐ Favorito" : "☆ Adicionar aos favoritos"}</button>
+          ${catId === CUSTOM_CAT_ID ? `<button type="button" class="icon-text-btn" id="btnEditResolution">✏️ Editar</button>` : ""}
           <div class="feedback-row">
             <span class="label">Foi útil?</span>
             <button type="button" class="icon-text-btn" id="btnFeedbackUp">👍 <span id="fbUpCount">${fb.up || ""}</span></button>
@@ -689,6 +1053,10 @@
       toggleFavorite(catId, subId);
       renderResolution(catId, subId);
     });
+    const editBtn = document.getElementById("btnEditResolution");
+    if(editBtn){
+      editBtn.addEventListener("click", () => openEditor(sub));
+    }
     wireFeedbackButtons(catId, subId);
 
     if(state.mode === "online") wireAiSection();
@@ -700,8 +1068,10 @@
     markSelectedInTree(catId, subId);
     renderResolution(catId, subId);
     document.getElementById("searchInput").value = "";
+    document.getElementById("searchSuggestions").classList.remove("open");
     pushRecent(catId, subId);
     if(!opts.skipHash) updateHash(catId, subId);
+    closeMobileNav();
   }
 
   /* ---------------------------------------------------------------------
@@ -1262,13 +1632,48 @@
   /* =========================================================================
      PESQUISA — ligação da caixa do cabeçalho
      ========================================================================= */
+  function renderSuggestions(query){
+    const box = document.getElementById("searchSuggestions");
+    const trimmed = query.trim();
+    if(!trimmed){
+      box.classList.remove("open");
+      box.innerHTML = "";
+      return;
+    }
+    const results = searchLocal(trimmed).slice(0, 6);
+    if(results.length === 0){
+      box.classList.remove("open");
+      box.innerHTML = "";
+      return;
+    }
+    box.innerHTML = results.map(r => `
+      <button type="button" class="sugg-item" data-cat="${r.cat.id}" data-sub="${r.sub.id}">
+        <span>${escapeHtml(r.sub.title)}</span><span class="path">${escapeHtml(r.cat.name)}</span>
+      </button>
+    `).join("");
+    box.classList.add("open");
+    box.querySelectorAll(".sugg-item").forEach(btn => {
+      // mousedown (não click) dispara antes do blur do input esconder a lista
+      btn.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        selectSubtopic(btn.dataset.cat, btn.dataset.sub);
+      });
+    });
+  }
+
   function wireSearch(){
     const input = document.getElementById("searchInput");
+    const box = document.getElementById("searchSuggestions");
     let debounceTimer = null;
+    let activeIndex = -1;
+
     input.addEventListener("input", () => {
       clearTimeout(debounceTimer);
+      const rawValue = input.value;
       debounceTimer = setTimeout(() => {
-        const q = input.value.trim();
+        activeIndex = -1;
+        renderSuggestions(rawValue);
+        const q = rawValue.trim();
         if(q){
           state.selected = null;
           renderSearchResults(q);
@@ -1277,9 +1682,37 @@
         }
       }, 180);
     });
+
+    input.addEventListener("focus", () => {
+      if(input.value.trim()) renderSuggestions(input.value);
+    });
+    input.addEventListener("blur", () => {
+      // pequeno atraso para o mousedown da sugestão ainda registar o clique
+      setTimeout(() => box.classList.remove("open"), 120);
+    });
+
     input.addEventListener("keydown", (e) => {
+      const items = Array.from(box.querySelectorAll(".sugg-item"));
+      if(e.key === "ArrowDown" && items.length){
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+        updateActiveSuggestion(items, activeIndex);
+        return;
+      }
+      if(e.key === "ArrowUp" && items.length){
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+        updateActiveSuggestion(items, activeIndex);
+        return;
+      }
       if(e.key === "Enter"){
         e.preventDefault();
+        if(activeIndex >= 0 && items[activeIndex]){
+          selectSubtopic(items[activeIndex].dataset.cat, items[activeIndex].dataset.sub);
+          box.classList.remove("open");
+          return;
+        }
+        box.classList.remove("open");
         const q = input.value.trim();
         if(q) renderSearchResults(q);
       }
@@ -1293,7 +1726,9 @@
   function clearAllLocalData(){
     const ok = confirm(
       "Isto vai apagar do teu browser: a chave de API guardada, favoritos, " +
-      "vistos recentemente, feedback e preferências de modo/tema.\n\n" +
+      "vistos recentemente, feedback, preferências de modo/tema e as tuas " +
+      "resoluções personalizadas (\"Minhas Resoluções\").\n\n" +
+      "Considera exportar as tuas resoluções personalizadas primeiro, no rodapé.\n\n" +
       "Esta ação não pode ser desfeita. Continuar?"
     );
     if(!ok) return;
@@ -1328,6 +1763,9 @@
       applyTheme(getStoredTheme());
     } else if(e.key === LS_KEYS.favorites || e.key === LS_KEYS.recent){
       renderSideLists();
+    } else if(e.key === LS_KEYS.customResolutions){
+      renderTree();
+      renderSideLists();
     }
   }
 
@@ -1344,6 +1782,10 @@
     renderSideLists();
     wireSearch();
     wireKeyboardShortcuts();
+    wireEditor();
+    wireExportImport();
+    wireMobileNav();
+    wireCommandPalette();
 
     document.getElementById("btnModeOffline").addEventListener("click", () => setMode("offline"));
     document.getElementById("btnModeOnline").addEventListener("click", () => setMode("online"));
